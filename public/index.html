@@ -53,160 +53,6 @@
       font-size: 14px;
     }
 
-    /* Visual Race Track (Above Text Box) */
-    .player-track-box {
-      background: #0f121d;
-      border: 1.5px solid #232a3d;
-      border-radius: 14px;
-      padding: 10px 14px 12px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-    }
-    .player-track-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #94a3b8;
-    }
-    .track-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #e2e8f0;
-      font-size: 14px;
-    }
-    .track-info {
-      color: #38bdf8;
-      font-variant-numeric: tabular-nums;
-      font-weight: 700;
-    }
-    .player-track {
-      height: 42px;
-      background: #141722;
-      border-radius: 10px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid #283046;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.7);
-    }
-    .track-kerb-top, .track-kerb-bot {
-      position: absolute;
-      left: 0;
-      right: 36px;
-      height: 3px;
-      background: repeating-linear-gradient(90deg, #ef4444 0px, #ef4444 12px, #f8fafc 12px, #f8fafc 24px);
-      opacity: 0.85;
-      z-index: 2;
-    }
-    .track-kerb-top { top: 0; }
-    .track-kerb-bot { bottom: 0; }
-
-    .track-dashes {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 36px;
-      height: 2px;
-      border-top: 2px dashed rgba(255, 255, 255, 0.18);
-      transform: translateY(-50%);
-      z-index: 1;
-    }
-    .track-finish {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 36px;
-      background: repeating-conic-gradient(#ffffff 0% 25%, #141722 0% 50%) 50% / 10px 10px;
-      border-left: 2px solid #ffffff;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      z-index: 5;
-    }
-    .track-nitro {
-      position: absolute;
-      top: 4px;
-      bottom: 4px;
-      left: 0;
-      border-radius: 6px;
-      background: linear-gradient(90deg, rgba(56, 189, 248, 0.08) 0%, rgba(56, 189, 248, 0.5) 75%, rgba(255, 255, 255, 0.95) 100%);
-      box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
-      transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-      z-index: 2;
-      width: 0%;
-    }
-    .player-car {
-      position: absolute;
-      top: 50%;
-      left: 18px;
-      transform: translate(-50%, -50%);
-      transition: left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-      z-index: 4;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
-    }
-    .player-car-icon {
-      font-size: 26px;
-      line-height: 1;
-      display: block;
-      filter: drop-shadow(0 0 8px #38bdf8);
-    }
-    .car-tag {
-      position: absolute;
-      bottom: calc(100% + 2px);
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 9px;
-      font-weight: 800;
-      color: #000;
-      background: #38bdf8;
-      padding: 1px 5px;
-      border-radius: 4px;
-      white-space: nowrap;
-      pointer-events: none;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-    }
-    .rival-car {
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      transition: left 0.5s ease-out;
-      z-index: 3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.8;
-    }
-    .rival-icon {
-      font-size: 20px;
-      line-height: 1;
-      display: block;
-      filter: grayscale(0.5);
-    }
-    .rival-tag {
-      position: absolute;
-      top: calc(100% + 2px);
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 8.5px;
-      font-weight: 700;
-      color: #cbd5e1;
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 1px 4px;
-      border-radius: 3px;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
     /* Typing Arena */
     .type {
       position: relative;
@@ -404,13 +250,6 @@
       font-size: 12px;
       color: #64748b;
       font-weight: 600;
-    }
-    .warmup-track-box {
-      margin-bottom: 12px;
-      padding: 6px 12px;
-    }
-    .warmup-track-box .player-track {
-      height: 34px;
     }
     .warmup-type-box {
       height: 140px;
@@ -685,7 +524,7 @@
       <div class="lobby-header center">
         <h1>You are in!</h1>
         <p class="muted">Waiting for the host to start round <b id="round">1</b>. Keep this page open.</p>
-        <div class="lobby-badge"><span class="pulse-dot"></span> <b id="count">0</b> players ready in lobby</div>
+        <div class="lobby-badge"><span class="pulse-dot"></span> <b id="count">0</b> players in the lobby</div>
       </div>
 
       <!-- WARM-UP PRACTICE ARENA -->
@@ -707,19 +546,8 @@
           <div class="wstat"><b id="wProg">0%</b><span>Progress</span></div>
         </div>
 
-        <!-- Mini Warm-Up Race Track -->
-        <div class="player-track-box warmup-track-box">
-          <div class="player-track">
-            <div class="track-kerb-top"></div>
-            <div class="track-dashes"></div>
-            <div class="track-nitro" id="warmupNitro"></div>
-            <div class="player-car" id="warmupCar">
-              <div class="car-tag">PRACTICE</div>
-              <span class="player-car-icon">🏎️</span>
-            </div>
-            <div class="track-finish">🏁</div>
-            <div class="track-kerb-bot"></div>
-          </div>
+        <div class="bar" style="margin-bottom:14px">
+          <div id="warmupProgBar" style="width:0%"></div>
         </div>
 
         <!-- Warm-Up Type Box -->
@@ -741,28 +569,6 @@
         <div class="stat"><b id="wpm" class="num">0</b><span>WPM</span></div>
         <div class="stat"><b id="acc" class="num">100%</b><span>Accuracy</span></div>
         <div class="stat"><b id="rank" class="num">-</b><span>Your rank</span></div>
-      </div>
-
-      <!-- VISUAL RACE TRACK (ABOVE PLAYER TEXT BOX) -->
-      <div class="player-track-box">
-        <div class="player-track-header">
-          <div class="track-title"><span class="track-icon">🏎️</span> Visual Sprint Track</div>
-          <div class="track-info" id="playerTrackInfo">0% Completed</div>
-        </div>
-        <div class="player-track">
-          <div class="track-kerb-top"></div>
-          <div class="track-dashes"></div>
-          <div class="track-nitro" id="playerNitro"></div>
-          <!-- Player's Car -->
-          <div class="player-car" id="playerCar">
-            <div class="car-tag">YOU</div>
-            <span class="player-car-icon">🏎️</span>
-          </div>
-          <!-- Competitor Rival Ghosts on Track -->
-          <div id="rivalGhosts" class="rival-ghosts"></div>
-          <div class="track-finish" title="Finish Line 🏁">🏁</div>
-          <div class="track-kerb-bot"></div>
-        </div>
       </div>
 
       <div class="type">
@@ -1010,7 +816,7 @@
     const wInp = $('warmupInp'), wPara = $('warmupPara');
 
     function initWarmup() {
-      if (wText && !wEnded) return; // Keep current warm-up if already in progress
+      if (wText && !wEnded) return; // Keep current warm-up text if already in progress
       wQuoteIdx = Math.floor(Math.random() * WARMUP_QUOTES.length);
       setWarmupQuote(WARMUP_QUOTES[wQuoteIdx]);
     }
@@ -1052,8 +858,7 @@
       for (let i = 0; i < wTyped.length; i++) if (wTyped[i] === wText[i]) c++;
       const pct = wText.length ? Math.min(100, Math.round((c / wText.length) * 100)) : 0;
       $('wProg').textContent = pct + '%';
-      $('warmupNitro').style.width = pct + '%';
-      $('warmupCar').style.left = 'calc(16px + (100% - 64px) * ' + (pct / 100) + ')';
+      $('warmupProgBar').style.width = pct + '%';
 
       if (wStartAt && c > 0) {
         const mins = Math.max(Date.now() - wStartAt, 1000) / 60000;
@@ -1146,21 +951,6 @@
     ['name', 'code', 'roll'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('joinBtn').click(); }));
     socket.on('connect', () => { if (joined) doJoin(); });
 
-    // ----- rival cars on player track -----
-    function renderRivals(top) {
-      if (!top || !top.length) { $('rivalGhosts').innerHTML = ''; return; }
-      const rivals = top.filter((r) => r.name !== me.name).slice(0, 4);
-      $('rivalGhosts').innerHTML = rivals.map((r) => {
-        const p = Math.min(100, Math.max(0, Math.round(r.progress * 100)));
-        const leftCalc = 'calc(18px + (100% - 68px) * ' + (p / 100) + ')';
-        const shortName = esc((r.name.split(' ')[0] || r.name).slice(0, 10));
-        return '<div class="rival-car" style="left:' + leftCalc + '" title="' + esc(r.name) + ' (' + Math.round(r.wpm) + ' WPM)">' +
-          '<div class="rival-tag">#' + r.rank + ' ' + shortName + '</div>' +
-          '<span class="rival-icon">🏎️</span>' +
-        '</div>';
-      }).join('');
-    }
-
     // ----- server events -----
     socket.on('state', (s) => {
       state = s; offset = s.serverNow - Date.now();
@@ -1175,11 +965,6 @@
     });
     socket.on('status', (s) => { active = s.active; if (!active && joined) show('s-out'); });
     socket.on('me', (m) => { $('rank').textContent = '#' + m.rank + ' / ' + m.total; });
-    socket.on('board', (b) => {
-      if (state && (state.phase === 'running' || state.phase === 'countdown')) {
-        renderRivals(b.top);
-      }
-    });
     socket.on('kicked', () => {
       joined = false; active = true; pid = uid(); localStorage.setItem('pid', pid);
       resetPlay(); roundKey = ''; show('s-join');
@@ -1213,7 +998,6 @@
         pendingResume = null;
       }
       $('cd').hidden = false; $('done').hidden = true; $('rank').textContent = '-';
-      $('rivalGhosts').innerHTML = '';
       render(); para.scrollTop = 0; updStats();
     }
 
@@ -1240,9 +1024,6 @@
 
       const pct = text.length ? Math.min(100, Math.round((c / text.length) * 100)) : 0;
       $('prog').style.width = pct + '%';
-      $('playerNitro').style.width = pct + '%';
-      $('playerCar').style.left = 'calc(18px + (100% - 68px) * ' + (pct / 100) + ')';
-      $('playerTrackInfo').textContent = pct + '% Completed • ' + wpmVal + ' WPM';
     }
 
     function flush() {
