@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stealth Mechanical Keyboard + RGB Lighting Preview</title>
+  <style>
+    :root {
+      --glow-color: #38bdf8; /* Default Ice Blue */
+      --glow-rgb: 56, 189, 248;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 20px;
+      background: #090a0f;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin: 0 0 6px;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      color: #94a3b8;
+      font-size: 15px;
+      margin: 0 0 20px;
+    }
+
+    /* Lighting Mode Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .c-btn {
+      background: #1e222b;
+      border: 1.5px solid #2d3340;
+      color: #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .c-btn:hover {
+      border-color: #475569;
+      transform: translateY(-1px);
+    }
+
+    .c-btn.active {
+      background: rgba(var(--glow-rgb), 0.15);
+      border-color: var(--glow-color);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(var(--glow-rgb), 0.35);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Interactive Test Input Box */
+    .test-box {
+      margin-bottom: 22px;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 860px;
+      height: 80px;
+      background: #12141a;
+      border: 1.5px solid #242833;
+      border-radius: 12px;
+      color: #f8fafc;
+      font-size: 18px;
+      padding: 14px 18px;
+      box-sizing: border-box;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--glow-color);
+      box-shadow: 0 0 15px rgba(var(--glow-rgb), 0.25);
+    }
+
+    /* ========================================================
+       STEALTH CUSTOM MECHANICAL KEYBOARD CHASSIS
+       ======================================================== */
+    .kb-case {
+      margin: 0 auto;
+      max-width: 880px;
+      padding: 16px 18px 20px;
+      background: linear-gradient(180deg, #18191e 0%, #101115 100%);
+      border: 2px solid #252830;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 
+                  0 0 0 1px rgba(255, 255, 255, 0.05),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      user-select: none;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Rotary Encoder Knob (like the real 75% board in photo!) */
+    .knob {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #353842 0%, #15161a 75%);
+      border: 2px solid #2b2e38;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.2);
+    }
+
+    .kb-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .kr {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    /* Stealth Sculpted Keycap */
+    .k {
+      flex: 1 1 0;
+      height: 46px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #32353d 0%, #22242a 100%);
+      border: 1px solid #3c404a;
+      border-bottom: 3.5px solid #141518;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.05;
+      color: #9da3af;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.1s, transform 0.06s, border-color 0.1s, box-shadow 0.1s, color 0.1s;
+    }
+
+    .k small {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 1px;
+    }
+
+    /* Stealth Modifiers */
+    .k.mod {
+      background: linear-gradient(180deg, #27292f 0%, #1a1b1f 100%);
+      border: 1px solid #31343c;
+      border-bottom: 3.5px solid #0f1013;
+      color: #838996;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    /* Stealth Spacebar */
+    .k.accent {
+      background: linear-gradient(180deg, #363942 0%, #24262c 100%);
+      border-color: #40444f;
+      border-bottom: 3.5px solid #141518;
+    }
+
+    /* ========================================================
+       REACTIVE BACKLIGHT & GLOW LIGHTING EFFECTS
+       ======================================================== */
+    
+    /* Next key to press: Elegant pulsing backlight */
+    .k.next {
+      border-color: var(--glow-color) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 14px rgba(var(--glow-rgb), 0.55),
+                  inset 0 0 10px rgba(var(--glow-rgb), 0.35) !important;
+      animation: keyPulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes keyPulse {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(var(--glow-rgb), 0.4), inset 0 0 6px rgba(var(--glow-rgb), 0.25);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(var(--glow-rgb), 0.8), inset 0 0 14px rgba(var(--glow-rgb), 0.5);
+      }
+    }
+
+    /* Key Light-Up on Click / Typing */
+    .k.lit, .k.hit {
+      background: radial-gradient(circle at 50% 40%, rgba(var(--glow-rgb), 0.95) 0%, rgba(var(--glow-rgb), 0.4) 60%, #181a20 100%) !important;
+      border-color: var(--glow-color) !important;
+      color: #ffffff !important;
+      text-shadow: 0 0 8px #ffffff, 0 0 15px var(--glow-color);
+      box-shadow: 0 0 28px rgba(var(--glow-rgb), 0.95),
+                  0 0 50px rgba(var(--glow-rgb), 0.5),
+                  inset 0 0 12px #ffffff !important;
+      transform: translateY(2.5px);
+      border-bottom-width: 1px !important;
+    }
+
+    /* Wrong key press: Red lighting warning */
+    .k.miss {
+      background: radial-gradient(circle, #f43f5e 0%, #881337 100%) !important;
+      border-color: #fb7185 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 25px rgba(244, 63, 94, 0.9) !important;
+      transform: translateY(2.5px);
+      border-bottom-width: 1px !important;
+    }
+
+    .approval-banner {
+      margin-top: 30px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 20px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .approval-btn {
+      background: #22c55e;
+      color: #052e16;
+      border: none;
+      padding: 14px 26px;
+      font-size: 15px;
+      font-weight: 800;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .approval-btn:hover {
+      background: #4ade80;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stealth 75% Mechanical Keyboard + Lighting</h1>
+    <p>Matches your uploaded dark matte keyboard. Keys light up dynamically as you type with real Alpaca switch sounds.</p>
+
+    <!-- RGB Lighting Scheme Selector -->
+    <div class="controls">
+      <span style="font-size:13px;color:#64748b;align-self:center;margin-right:4px">Lighting Mode:</span>
+      <button class="c-btn active" onclick="setLighting('#38bdf8', '56, 189, 248', this)">
+        <span class="dot" style="background:#38bdf8;box-shadow:0 0 8px #38bdf8"></span> Ice Blue Neon
+      </button>
+      <button class="c-btn" onclick="setLighting('#a855f7', '168, 85, 247', this)">
+        <span class="dot" style="background:#a855f7;box-shadow:0 0 8px #a855f7"></span> Cyberpunk Violet
+      </button>
+      <button class="c-btn" onclick="setLighting('#f59e0b', '245, 158, 11', this)">
+        <span class="dot" style="background:#f59e0b;box-shadow:0 0 8px #f59e0b"></span> Amber Flare
+      </button>
+      <button class="c-btn" onclick="setLighting('#10b981', '16, 185, 129', this)">
+        <span class="dot" style="background:#10b981;box-shadow:0 0 8px #10b981"></span> Matrix Emerald
+      </button>
+      <button class="c-btn" onclick="setLighting('rgb', 'rgb', this)">
+        <span class="dot" style="background:linear-gradient(45deg,#f43f5e,#38bdf8,#a855f7)"></span> RGB Rainbow Flow
+      </button>
+    </div>
+
+    <!-- Live typing box -->
+    <div class="test-box">
+      <textarea id="testInput" placeholder="Click here and type to see the keys light up in real-time..."></textarea>
+    </div>
+
+    <!-- Stealth Keyboard Chassis -->
+    <div class="kb-case">
+      <div class="knob" title="Volume / Rotary Knob"></div>
+      <div class="kb-rows" id="kb"></div>
+    </div>
+
+    <div class="approval-banner">
+      <div style="text-align:left">
+        <b style="font-size:16px;color:#f8fafc">Like this stealth keyboard & lighting?</b>
+        <div style="font-size:13px;color:#94a3b8;margin-top:3px">If you approve, reply in chat with your favorite lighting color and I'll update the main game code and push to GitHub!</div>
+      </div>
+      <button class="approval-btn" onclick="alert('Great! Please reply in the chat and I will push this design to your live site!')">
+        ✅ Approve This Design
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    // Layout
+    const KB = [
+      ['`~', '1!', '2@', '3#', '4$', '5%', '6^', '7&', '8*', '9(', '0)', '-_', '=+', 'Backspace'],
+      ['Tab', 'qQ', 'wW', 'eE', 'rR', 'tT', 'yY', 'uU', 'iI', 'oO', 'pP', '[{', ']}', '\\|'],
+      ['Caps', 'aA', 'sS', 'dD', 'fF', 'gG', 'hH', 'jJ', 'kK', 'lL', ';:', "'\"", 'Enter'],
+      ['Shift', 'zZ', 'xX', 'cC', 'vV', 'bB', 'nN', 'mM', ',<', '.>', '/?', 'Shift'],
+      ['Ctrl', 'Alt', 'Space', 'Alt', 'Ctrl'],
+    ];
+    const KW = { Backspace: 2.1, Tab: 1.5, '\\|': 1.5, Caps: 1.8, Enter: 2.2, Shift: 2.4, Ctrl: 1.6, Alt: 1.6, Space: 6.8 };
+    const MODS = new Set(['Backspace', 'Tab', 'Caps', 'Enter', 'Shift', 'Ctrl', 'Alt']);
+    const keyEl = {}, shiftEls = [];
+    let isRainbow = false;
+    let rainbowHue = 0;
+
+    (function buildKeyboard() {
+      const kb = $('kb');
+      KB.forEach((row) => {
+        const r = document.createElement('div');
+        r.className = 'kr';
+        row.forEach((k, idx) => {
+          const d = document.createElement('div');
+          d.className = k === 'Space' ? 'k accent' : (MODS.has(k) ? 'k mod' : 'k');
+          d.style.flex = (KW[k] || 1) + ' 1 0';
+          if (k.length === 2) {
+            const a = k[0], b = k[1];
+            d.innerHTML = /[a-z]/.test(a) ? esc(b) : '<small>' + esc(b) + '</small>' + esc(a);
+            keyEl[a] = d; keyEl[b] = d; if (idx <= 5) d.dataset.left = '1';
+          } else {
+            d.textContent = k === 'Space' ? '' : k;
+            if (k === 'Shift') shiftEls.push(d); else if (k === 'Space') keyEl[' '] = d; else keyEl[k] = d;
+          }
+          
+          // Click directly on keyboard
+          d.addEventListener('mousedown', () => {
+            lightKey(d);
+            if (k === 'Space') playSound(' ');
+            else playSound(k[0] || k);
+          });
+
+          r.appendChild(d);
+        });
+        kb.appendChild(r);
+      });
+    })();
+
+    // Lighting color changer
+    function setLighting(color, rgb, btn) {
+      document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (color === 'rgb') {
+        isRainbow = true;
+      } else {
+        isRainbow = false;
+        document.documentElement.style.setProperty('--glow-color', color);
+        document.documentElement.style.setProperty('--glow-rgb', rgb);
+      }
+    }
+
+    // Light-up animation on keypress
+    function lightKey(el) {
+      if (!el) return;
+      if (isRainbow) {
+        rainbowHue = (rainbowHue + 38) % 360;
+        const col = `hsl(${rainbowHue}, 95%, 60%)`;
+        el.style.setProperty('--glow-color', col);
+        el.style.background = `radial-gradient(circle, ${col} 0%, rgba(0,0,0,0.8) 100%)`;
+        el.style.boxShadow = `0 0 28px ${col}, inset 0 0 10px #ffffff`;
+        el.style.borderColor = col;
+      }
+      el.classList.add('lit');
+      setTimeout(() => {
+        el.classList.remove('lit');
+        if (isRainbow) {
+          el.style.background = '';
+          el.style.boxShadow = '';
+          el.style.borderColor = '';
+        }
+      }, 160);
+    }
+
+    // Web Audio Alpaca switch playback
+    let audioCtx = null;
+    let keyBuffers = [], spaceBuffer = null;
+
+    function getAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    async function loadSound(url) {
+      try {
+        const x = getAudio();
+        const res = await fetch(url);
+        const ab = await res.arrayBuffer();
+        return await x.decodeAudioData(ab);
+      } catch(e) { return null; }
+    }
+
+    async function initAudio() {
+      for (let i = 1; i <= 5; i++) {
+        const b = await loadSound('/sounds/alpaca/press_key' + i + '.mp3');
+        if (b) keyBuffers.push(b);
+      }
+      spaceBuffer = await loadSound('/sounds/alpaca/press_space.mp3');
+    }
+    initAudio();
+
+    function playSound(ch) {
+      const x = getAudio();
+      const buf = (ch === ' ' && spaceBuffer) ? spaceBuffer : keyBuffers[Math.floor(Math.random() * keyBuffers.length)];
+      if (!buf) return;
+      const src = x.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = 0.98 + Math.random() * 0.04;
+      const g = x.createGain();
+      g.gain.value = 0.85;
+      src.connect(g); g.connect(x.destination);
+      src.start();
+    }
+
+    // Connect real typing input
+    const testInput = $('testInput');
+    testInput.addEventListener('keydown', (e) => {
+      getAudio();
+      const k = e.key;
+      if (keyEl[k]) lightKey(keyEl[k]);
+      if (k === 'Backspace' && keyEl['Backspace']) lightKey(keyEl['Backspace']);
+      if (k === 'Enter' && keyEl['Enter']) lightKey(keyEl['Enter']);
+      if (e.shiftKey && shiftEls.length) shiftEls.forEach(lightKey);
+      playSound(k);
+    });
+
+    // Default pulse on first key to demonstrate 'next'
+    if (keyEl['t']) keyEl['t'].classList.add('next');
+  </script>
+</body>
+</html>
