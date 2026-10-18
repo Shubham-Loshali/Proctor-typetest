@@ -30,19 +30,31 @@
     }
 
     #para .ok {
-      color: var(--ok)
+      color: #10b981;
+      font-weight: 500;
     }
 
     #para .bad {
-      color: var(--bad);
-      background: var(--badbg);
-      border-radius: 3px
+      color: #fff !important;
+      background: #ef4444 !important;
+      border-radius: 4px;
+      padding: 0 2px;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      animation: badPulse 0.4s infinite alternate;
+    }
+
+    @keyframes badPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
     }
 
     #para .cur {
-      background: var(--cur);
-      color: var(--ink);
-      border-radius: 3px
+      background: rgba(56, 189, 248, 0.2);
+      color: #0369a1;
+      border-bottom: 3px solid #0284c7;
+      border-radius: 3px;
+      font-weight: 700;
     }
 
     #inp {
@@ -501,6 +513,9 @@
       });
     })();
     function setNext(ch) {
+      if (!locked && typed.length > 0 && typed[typed.length - 1] !== text[typed.length - 1]) {
+        ch = 'Backspace';
+      }
       if (ch === nextCh) return;
       nextCh = ch;
       hl.forEach((e) => e.classList.remove('next')); hl = [];
@@ -672,21 +687,65 @@
     setInterval(() => { if (dirty && started && !ended) flush(); }, 300);
 
     inp.addEventListener('input', (e) => {
-      if (!e.isTrusted) { inp.value = typed; return; } // ignore script-generated input
+      if (!e.isTrusted) { inp.value = typed; return; }
       if (locked) { inp.value = typed; return; }
       const v = inp.value.replace(/[\r\n]/g, '').slice(0, text.length);
-      if (v.length > typed.length + 1) { inp.value = typed; return; } // blocks pasted/burst text
+
+      // Handle Backspace / character deletion
+      if (v.length < typed.length) {
+        keys++;
+        Snd.back();
+        flash(keyEl['Backspace'], 'hit');
+        typed = v;
+        inp.value = v;
+        dirty = true;
+        render();
+        updStats();
+        return;
+      }
+
+      // If previous character has an uncorrected typo:
+      // Require the user to Backspace the typo first so they never get desynchronized!
+      if (typed.length > 0 && typed[typed.length - 1] !== text[typed.length - 1]) {
+        inp.value = typed;
+        Snd.err();
+        if (v.length > typed.length) {
+          const char = v[v.length - 1];
+          if (keyEl[char]) flash(keyEl[char], 'miss');
+        }
+        return;
+      }
+
+      // If user is typing forward
+      if (v.length > typed.length + 1) { inp.value = typed; return; }
       if (v.length > typed.length) {
         keys++;
         const i = v.length - 1;
-        if (v[i] !== text[i]) { mistakes++; Snd.err(); flash(keyEl[v[i]], 'miss'); } else { Snd.key(v[i]); flash(keyEl[v[i]], 'hit'); }
-      } else if (v.length < typed.length) { Snd.back(); flash(keyEl['Backspace'], 'hit'); }
-      typed = v; inp.value = v; dirty = true;
-      render(); updStats();
-      if (typed.length >= text.length) {
-        finAt = Date.now() + offset; locked = true; inp.disabled = true; setNext(null); flush();
-        $('done').hidden = false; $('done').textContent = 'Finished! Waiting for the other players...';
-        Snd.win(); updStats();
+        if (v[i] !== text[i]) {
+          mistakes++;
+          Snd.err();
+          flash(keyEl[v[i]], 'miss');
+        } else {
+          Snd.key(v[i]);
+          flash(keyEl[v[i]], 'hit');
+        }
+      }
+      typed = v;
+      inp.value = v;
+      dirty = true;
+      render();
+      updStats();
+
+      if (typed.length >= text.length && typed === text) {
+        finAt = Date.now() + offset;
+        locked = true;
+        inp.disabled = true;
+        setNext(null);
+        flush();
+        $('done').hidden = false;
+        $('done').textContent = 'Finished! Waiting for the other players...';
+        Snd.win();
+        updStats();
       }
     });
     inp.addEventListener('beforeinput', (e) => {
@@ -719,6 +778,15 @@
     inp.addEventListener('blur', () => { if (!locked) $('hint').hidden = false; });
     inp.addEventListener('focus', () => { $('hint').hidden = true; });
     document.addEventListener('click', () => { if (!locked && !inp.disabled) inp.focus(); });
+    document.addEventListener('mousedown', (e) => {
+      if (!$('s-join').hidden) return;
+      if (!locked && !inp.disabled && e.target !== inp) {
+        if (e.target.closest('.light-btn') || e.target.closest('#kbCase') || e.target.closest('#hint') || e.target.closest('.type')) {
+          e.preventDefault();
+          inp.focus();
+        }
+      }
+    });
 
     // ----- clock: countdown, timer, lock at end -----
     setInterval(() => {
