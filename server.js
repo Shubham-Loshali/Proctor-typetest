@@ -250,17 +250,27 @@ io.on('connection', (socket) => {
 
   socket.on('admin:setup', (d, cb) => {
     if (!isAdmin()) return deny(cb);
-    if (game.phase !== 'lobby') return cb({ ok: false, error: 'Settings can only be changed in the lobby' });
+    if (game.phase === 'running' || game.phase === 'countdown') {
+      return cb({ ok: false, error: 'A round is currently in progress. Abort it first if you want to change settings.' });
+    }
     const text = cleanText(d && d.text);
     const dur = Math.round(Number(d && d.duration));
-    if (text.length < 30) return cb({ ok: false, error: 'Paragraph is too short' });
+    if (text.length < 30) return cb({ ok: false, error: 'Paragraph is too short (minimum 30 characters)' });
     if (!(dur >= 15 && dur <= 7200)) return cb({ ok: false, error: 'Duration must be 15 to 7200 seconds (up to 2 hours)' });
     game.text = text; game.duration = dur;
+    if (game.phase === 'finished') {
+      resetLobby(0, true);
+    } else {
+      pushState();
+    }
     cb({ ok: true, text, duration: dur });
   });
 
   socket.on('admin:start', (cb) => {
     if (!isAdmin()) return deny(cb);
+    if (game.phase === 'finished') {
+      resetLobby(0, true);
+    }
     const err = startGame();
     cb(err ? { ok: false, error: err } : { ok: true });
   });

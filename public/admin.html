@@ -185,11 +185,13 @@
     };
 
     function buttons() {
-      $('start').disabled = phase !== 'lobby';
-      $('save').disabled = phase !== 'lobby';
-      $('abort').disabled = phase === 'lobby';
-      $('next').disabled = phase === 'countdown' || phase === 'running';
-      $('text').disabled = phase !== 'lobby'; $('dur').disabled = phase !== 'lobby';
+      const busy = phase === 'countdown' || phase === 'running';
+      $('start').disabled = busy;
+      $('save').disabled = busy;
+      $('abort').disabled = !busy;
+      $('next').disabled = busy;
+      $('text').disabled = busy;
+      $('dur').disabled = busy;
     }
     socket.on('state', (s) => {
       phase = s.phase;
