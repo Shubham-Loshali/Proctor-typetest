@@ -1,115 +1,227 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Innovista Type Rush - Live</title>
-<link rel="stylesheet" href="style.css">
-<style>
-  body{overflow:hidden}
-  .stage{display:grid;grid-template-columns:minmax(300px,36%) 1fr;gap:28px;padding:28px 36px;height:calc(100vh - 69px)}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-  #phase{font-size:28px;font-weight:700;color:var(--mute)}
-  #clock{font-size:clamp(80px,13vw,190px);font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:10px 0}
-  #sub{font-size:22px;color:var(--mute);max-width:90%}
-  #sub b{color:var(--ink)}
-  .board{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 28px;overflow:hidden}
-  .board h2{font-size:26px;margin-bottom:10px}
-  .row{display:grid;grid-template-columns:54px minmax(120px,1.1fr) 2fr 110px;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:clamp(18px,2.4vw,30px)}
-  .row:last-child{border-bottom:0}
-  .row .r{font-weight:800;color:var(--mute)}
-  .row .n{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .row .w{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
-  .row .bar{height:14px}
-  .row.first .r,.row.first .w{color:var(--brand)}
-  .row.done .bar>div{background:var(--ok)}
-  #winner{margin-top:18px;padding:16px 22px;border-radius:14px;background:#fff7e0;border:1px solid #f1d98a;font-size:30px;font-weight:800}
-  .empty{color:var(--mute);font-size:24px;padding:30px 0}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Innovista TypeSprint - Live</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      overflow: hidden
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(300px, 36%) 1fr;
+      gap: 28px;
+      padding: 28px 36px;
+      height: calc(100vh - 69px)
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center
+    }
+
+    #phase {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--mute)
+    }
+
+    #clock {
+      font-size: clamp(80px, 13vw, 190px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.03em;
+      font-variant-numeric: tabular-nums;
+      margin: 10px 0
+    }
+
+    #sub {
+      font-size: 22px;
+      color: var(--mute);
+      max-width: 90%
+    }
+
+    #sub b {
+      color: var(--ink)
+    }
+
+    .board {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px 28px;
+      overflow: hidden
+    }
+
+    .board h2 {
+      font-size: 26px;
+      margin-bottom: 10px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 54px minmax(120px, 1.1fr) 2fr 110px;
+      align-items: center;
+      gap: 16px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: clamp(18px, 2.4vw, 30px)
+    }
+
+    .row:last-child {
+      border-bottom: 0
+    }
+
+    .row .r {
+      font-weight: 800;
+      color: var(--mute)
+    }
+
+    .row .n {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .row .w {
+      text-align: right;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums
+    }
+
+    .row .bar {
+      height: 14px
+    }
+
+    .row.first .r,
+    .row.first .w {
+      color: var(--brand)
+    }
+
+    .row.done .bar>div {
+      background: var(--ok)
+    }
+
+    #winner {
+      margin-top: 18px;
+      padding: 16px 22px;
+      border-radius: 14px;
+      background: #fff7e0;
+      border: 1px solid #f1d98a;
+      font-size: 30px;
+      font-weight: 800
+    }
+
+    .empty {
+      color: var(--mute);
+      font-size: 24px;
+      padding: 30px 0
+    }
+  </style>
 </head>
+
 <body>
-<header class="top">
-  <div class="brand">Innovista <i>Type Rush</i></div>
-  <div style="text-align:right"><div id="join" class="muted" style="font-size:20px"></div><div id="codebox" style="font-size:30px;font-weight:800" hidden>Code: <span id="codev" style="letter-spacing:.18em;color:var(--brand)"></span></div></div>
-</header>
-<main class="stage">
-  <section class="panel">
-    <div id="phase">Players are joining</div>
-    <div id="clock">0:00</div>
-    <div id="sub"></div>
-    <div id="winner" hidden></div>
-  </section>
-  <section class="board">
-    <h2 id="btitle">Live leaderboard</h2>
-    <div id="rows"><div class="empty">The leaderboard appears when the round starts.</div></div>
-  </section>
-</main>
+  <header class="top">
+    <div class="brand">Innovista <i>TypeSprint</i></div>
+    <div style="text-align:right">
+      <div id="join" class="muted" style="font-size:20px"></div>
+      <div id="codebox" style="font-size:30px;font-weight:800" hidden>Code: <span id="codev"
+          style="letter-spacing:.18em;color:var(--brand)"></span></div>
+    </div>
+  </header>
+  <main class="stage">
+    <section class="panel">
+      <div id="phase">Players are joining</div>
+      <div id="clock">0:00</div>
+      <div id="sub"></div>
+      <div id="winner" hidden></div>
+    </section>
+    <section class="board">
+      <h2 id="btitle">Live leaderboard</h2>
+      <div id="rows">
+        <div class="empty">The leaderboard appears when the round starts.</div>
+      </div>
+    </section>
+  </main>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const fmt = (ms) => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-const socket = io();
-let state = null, offset = 0, joinUrl = '';
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const fmt = (ms) => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+    const socket = io();
+    let state = null, offset = 0, joinUrl = '';
 
-fetch('/api/info').then((r) => r.json()).then((d) => {
-  joinUrl = (d.urls && d.urls[0]) || location.origin;
-  $('join').innerHTML = 'Join at <b style="color:var(--ink)">' + esc(joinUrl.replace('http://', '')) + '</b>';
-}).catch(() => {});
+    fetch('/api/info').then((r) => r.json()).then((d) => {
+      joinUrl = (d.urls && d.urls[0]) || location.origin;
+      $('join').innerHTML = 'Join at <b style="color:var(--ink)">' + esc(joinUrl.replace('http://', '')) + '</b>';
+    }).catch(() => { });
 
-let code = '';
-socket.on('code', (c) => { code = c; $('codev').textContent = c; paint(); });
-socket.on('connect', () => socket.emit('watch'));
+    let code = '';
+    socket.on('code', (c) => { code = c; $('codev').textContent = c; paint(); });
+    socket.on('connect', () => socket.emit('watch'));
 
-function rows(list, finalView) {
-  if (!list.length) { $('rows').innerHTML = '<div class="empty">No scores yet.</div>'; return; }
-  $('rows').innerHTML = list.map((r, i) =>
-    '<div class="row' + (i === 0 ? ' first' : '') + (r.done ? ' done' : '') + '">' +
-    '<div class="r">' + r.rank + '</div><div class="n">' + esc(r.name) + '</div>' +
-    '<div class="bar"><div style="width:' + Math.round((finalView ? 1 : r.progress) * 100) + '%"></div></div>' +
-    '<div class="w">' + Math.round(r.wpm) + ' <span class="muted" style="font-size:.55em">WPM</span></div></div>').join('');
-}
+    function rows(list, finalView) {
+      if (!list.length) { $('rows').innerHTML = '<div class="empty">No scores yet.</div>'; return; }
+      $('rows').innerHTML = list.map((r, i) =>
+        '<div class="row' + (i === 0 ? ' first' : '') + (r.done ? ' done' : '') + '">' +
+        '<div class="r">' + r.rank + '</div><div class="n">' + esc(r.name) + '</div>' +
+        '<div class="bar"><div style="width:' + Math.round((finalView ? 1 : r.progress) * 100) + '%"></div></div>' +
+        '<div class="w">' + Math.round(r.wpm) + ' <span class="muted" style="font-size:.55em">WPM</span></div></div>').join('');
+    }
 
-socket.on('state', (s) => {
-  state = s; offset = s.serverNow - Date.now();
-  if (s.phase === 'lobby') {
-    $('winner').hidden = true; $('btitle').textContent = 'Live leaderboard';
-    $('rows').innerHTML = '<div class="empty">The leaderboard appears when the round starts.</div>';
-  }
-  if (s.phase === 'running' || s.phase === 'countdown') $('winner').hidden = true;
-  paint();
-});
-socket.on('board', (b) => { if (state && state.phase === 'running') { rows(b.top, false); $('sub').innerHTML = '<b>' + b.done + '</b> of <b>' + b.count + '</b> finished the paragraph'; } });
-socket.on('results', (r) => {
-  $('btitle').textContent = 'Final results';
-  rows(r.top, true);
-  $('winner').hidden = !r.winner;
-  if (r.winner) $('winner').textContent = 'Winner: ' + r.winner.name + ' - ' + r.winner.wpm + ' WPM';
-});
+    socket.on('state', (s) => {
+      state = s; offset = s.serverNow - Date.now();
+      if (s.phase === 'lobby') {
+        $('winner').hidden = true; $('btitle').textContent = 'Live leaderboard';
+        $('rows').innerHTML = '<div class="empty">The leaderboard appears when the round starts.</div>';
+      }
+      if (s.phase === 'running' || s.phase === 'countdown') $('winner').hidden = true;
+      paint();
+    });
+    socket.on('board', (b) => { if (state && state.phase === 'running') { rows(b.top, false); $('sub').innerHTML = '<b>' + b.done + '</b> of <b>' + b.count + '</b> finished the paragraph'; } });
+    socket.on('results', (r) => {
+      $('btitle').textContent = 'Final results';
+      rows(r.top, true);
+      $('winner').hidden = !r.winner;
+      if (r.winner) $('winner').textContent = 'Winner: ' + r.winner.name + ' - ' + r.winner.wpm + ' WPM';
+    });
 
-function paint() {
-  if (!state) return;
-  $('codebox').hidden = !(code && state.phase === 'lobby'); // code only shown while players can join
-  const now = Date.now() + offset;
-  if (state.phase === 'lobby') {
-    $('phase').textContent = 'Round ' + state.round + ' - players are joining';
-    $('clock').textContent = fmt(state.duration * 1000);
-    $('sub').innerHTML = '<b>' + state.count + '</b> players ready';
-  } else if (state.phase === 'countdown' || (state.phase === 'running' && now < state.startAt)) {
-    $('phase').textContent = 'Get ready';
-    $('clock').textContent = Math.max(1, Math.ceil((state.startAt - now) / 1000));
-    $('sub').textContent = 'Eyes on your screen';
-  } else if (state.phase === 'running') {
-    $('phase').textContent = 'Typing now';
-    $('clock').textContent = fmt(Math.max(0, state.endAt - now));
-  } else if (state.phase === 'finished') {
-    $('phase').textContent = 'Time is up';
-    $('clock').textContent = '0:00';
-    $('sub').textContent = 'Round ' + state.round + ' complete';
-  }
-}
-setInterval(paint, 100);
-</script>
+    function paint() {
+      if (!state) return;
+      $('codebox').hidden = !(code && state.phase === 'lobby'); // code only shown while players can join
+      const now = Date.now() + offset;
+      if (state.phase === 'lobby') {
+        $('phase').textContent = 'Round ' + state.round + ' - players are joining';
+        $('clock').textContent = fmt(state.duration * 1000);
+        $('sub').innerHTML = '<b>' + state.count + '</b> players ready';
+      } else if (state.phase === 'countdown' || (state.phase === 'running' && now < state.startAt)) {
+        $('phase').textContent = 'Get ready';
+        $('clock').textContent = Math.max(1, Math.ceil((state.startAt - now) / 1000));
+        $('sub').textContent = 'Eyes on your screen';
+      } else if (state.phase === 'running') {
+        $('phase').textContent = 'Typing now';
+        $('clock').textContent = fmt(Math.max(0, state.endAt - now));
+      } else if (state.phase === 'finished') {
+        $('phase').textContent = 'Time is up';
+        $('clock').textContent = '0:00';
+        $('sub').textContent = 'Round ' + state.round + ' complete';
+      }
+    }
+    setInterval(paint, 100);
+  </script>
 </body>
+
 </html>

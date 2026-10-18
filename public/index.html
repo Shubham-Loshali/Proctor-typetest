@@ -1,362 +1,559 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Innovista Type Rush</title>
-<link rel="stylesheet" href="style.css">
-<style>
-  .type{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:14px;height:240px;margin-bottom:14px}
-  #para{position:absolute;inset:0;padding:22px 26px;overflow:hidden;font-size:26px;line-height:1.7;white-space:pre-wrap;color:#8b98ad;user-select:none;border-radius:14px}
-  #para .ok{color:var(--ok)}
-  #para .bad{color:var(--bad);background:var(--badbg);border-radius:3px}
-  #para .cur{background:var(--cur);color:var(--ink);border-radius:3px}
-  #inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;resize:none;border:0;cursor:text}
-  .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.88);border-radius:14px;font-weight:700;font-size:20px;pointer-events:none}
-  .cd{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.95);border-radius:14px}
-  .cd b{font-size:96px;line-height:1;color:var(--brand);font-variant-numeric:tabular-nums}
-  .center{text-align:center}
-  .big{font-size:64px;font-weight:800;line-height:1.1;letter-spacing:-.02em}
-  .winner{background:#fff7e0;border:1px solid #f1d98a;border-radius:12px;padding:14px 18px;margin:18px 0;font-weight:700}
-  .join{max-width:480px;margin:40px auto}
-  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  #s-join input{-webkit-user-select:text;user-select:text}
-  @media print{body{display:none!important}}
-  .type{height:212px}
-  .kb{margin:18px auto 0;max-width:880px;display:flex;flex-direction:column;gap:6px;user-select:none}
-  .kb.off{display:none}
-  .kb .kr{display:flex;gap:6px;justify-content:center}
-  .kb .k{flex:1 1 0;height:42px;border-radius:8px;border:1px solid rgba(20,33,61,.12);border-bottom-width:3px;background:var(--f,#f4f6fa);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;font-weight:600;line-height:1.05;color:#33415c;transition:background .08s,transform .08s}
-  .kb .k small{font-size:10px;font-weight:600;color:#6f7f99}
-  .kb .k.next{background:var(--brand);color:#fff;border-color:var(--brand-d);box-shadow:0 0 0 3px rgba(43,108,240,.25)}
-  .kb .k.next small{color:#dbe7ff}
-  .kb .k.hit{background:#bff0d4;color:#14213d}
-  .kb .k.miss{background:#ffc2cb;color:#14213d}
-  .kb .k.hit,.kb .k.miss{transform:translateY(2px)}
-  .hdr-btns{display:flex;gap:8px}
-  @media(max-width:760px){.kb{display:none}}
-</style>
-</head>
-<body>
-<header class="top">
-  <div class="brand">Innovista <i>Type Rush</i></div>
-  <div class="hdr-btns"><button id="kbBtn" class="ghost" type="button">Keyboard on</button><button id="mute" class="ghost" type="button">Sound on</button></div>
-</header>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Innovista TypeSprint</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .type {
+      position: relative;
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      height: 240px;
+      margin-bottom: 14px
+    }
 
-<main class="wrap">
-  <!-- JOIN -->
-  <section id="s-join" class="card join">
-    <h1>Join the race</h1>
-    <p class="muted">Enter your name and the join code from the big screen. The host starts the round for everyone at the same time.</p>
-    <label for="name">Your name</label>
-    <input id="name" type="text" maxlength="24" autocomplete="off">
-    <label for="code">Join code (ask the host)</label>
-    <input id="code" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:.15em;font-weight:700">
-    <label for="roll">Roll number or team (optional)</label>
-    <input id="roll" type="text" maxlength="20" autocomplete="off">
-    <div id="err" class="err"></div>
-    <button id="joinBtn" type="button" style="width:100%">Join</button>
-  </section>
+    #para {
+      position: absolute;
+      inset: 0;
+      padding: 22px 26px;
+      overflow: hidden;
+      font-size: 26px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: #8b98ad;
+      user-select: none;
+      border-radius: 14px
+    }
 
-  <!-- LOBBY -->
-  <section id="s-lobby" class="card center" hidden>
-    <h1>You are in!</h1>
-    <p class="muted">Waiting for the host to start round <b id="round">1</b>. Keep this page open.</p>
-    <div class="big num" id="count">0</div>
-    <p class="muted">players in the lobby</p>
-    <p class="muted">Tip: place your fingers on the home row and sit comfortably.</p>
-  </section>
+    #para .ok {
+      color: var(--ok)
+    }
 
-  <!-- PLAY -->
-  <section id="s-play" hidden>
-    <div class="stats">
-      <div class="stat"><b id="time" class="num">0:00</b><span>Time left</span></div>
-      <div class="stat"><b id="wpm" class="num">0</b><span>WPM</span></div>
-      <div class="stat"><b id="acc" class="num">100%</b><span>Accuracy</span></div>
-      <div class="stat"><b id="rank" class="num">-</b><span>Your rank</span></div>
-    </div>
-    <div class="type">
-      <div id="para"></div>
-      <textarea id="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled></textarea>
-      <div id="hint" class="hint" hidden>Click here to keep typing</div>
-      <div id="cd" class="cd"><span class="muted">Get ready</span><b id="cdn">5</b></div>
-    </div>
-    <div class="bar"><div id="prog"></div></div>
-    <div id="kb" class="kb" aria-hidden="true"></div>
-    <p id="rules" class="muted center" style="font-size:14px;margin-top:14px">Copy, paste and shortcuts are disabled. Leaving this page is recorded and shown to the host.</p>
-    <p id="done" class="muted center" hidden></p>
-  </section>
+    #para .bad {
+      color: var(--bad);
+      background: var(--badbg);
+      border-radius: 3px
+    }
 
-  <!-- SPECTATOR -->
-  <section id="s-out" class="card center" hidden>
-    <h1>You are watching this round</h1>
-    <p class="muted">Only the qualified players are typing now. Follow the live leaderboard on the big screen.</p>
-  </section>
+    #para .cur {
+      background: var(--cur);
+      color: var(--ink);
+      border-radius: 3px
+    }
 
-  <!-- RESULT -->
-  <section id="s-result" class="card center" hidden>
-    <p class="muted" style="margin:0">Round finished</p>
-    <div class="big" id="r-rank">#1</div>
-    <p class="muted" id="r-of"></p>
-    <div class="stats" style="justify-content:center">
-      <div class="stat"><b id="r-wpm" class="num">0</b><span>Net WPM</span></div>
-      <div class="stat"><b id="r-acc" class="num">0%</b><span>Accuracy</span></div>
-    </div>
-    <div class="winner" id="r-win"></div>
-    <table><thead><tr><th>#</th><th>Name</th><th>WPM</th><th>Accuracy</th></tr></thead><tbody id="r-top"></tbody></table>
-  </section>
-</main>
+    #inp {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      resize: none;
+      border: 0;
+      cursor: text
+    }
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="sound.js"></script>
-<script>
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36); // crypto.randomUUID needs HTTPS, so not used
-const fmt = (ms) => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-const screens = ['s-join', 's-lobby', 's-play', 's-out', 's-result'];
-const show = (id) => screens.forEach((s) => { $(s).hidden = s !== id; });
+    .hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, .88);
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 20px;
+      pointer-events: none
+    }
 
-const socket = io();
-let pid = localStorage.getItem('pid') || uid();
-localStorage.setItem('pid', pid);
-let me = { name: localStorage.getItem('name') || '', roll: localStorage.getItem('roll') || '', code: localStorage.getItem('code') || '' };
-$('name').value = me.name; $('roll').value = me.roll; $('code').value = me.code;
+    .cd {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, .95);
+      border-radius: 14px
+    }
 
-let joined = false, active = true, state = null, offset = 0, pendingResume = null;
-let text = '', chars = [], typed = '', keys = 0, mistakes = 0;
-let locked = true, started = false, ended = false, finAt = 0, lastN = null, roundKey = '', dirty = false;
-const inp = $('inp'), para = $('para');
+    .cd b {
+      font-size: 96px;
+      line-height: 1;
+      color: var(--brand);
+      font-variant-numeric: tabular-nums
+    }
 
-// ----- sound button -----
-const muteLabel = () => { $('mute').textContent = Snd.isMuted() ? 'Sound off' : 'Sound on'; };
-$('mute').onclick = () => { Snd.toggle(); muteLabel(); };
-muteLabel();
+    .center {
+      text-align: center
+    }
 
-// ----- on-screen keyboard (next key is highlighted, pressed keys flash) -----
-const KB = [
-  ['`~','1!','2@','3#','4$','5%','6^','7&','8*','9(','0)','-_','=+','Backspace'],
-  ['Tab','qQ','wW','eE','rR','tT','yY','uU','iI','oO','pP','[{',']}','\\|'],
-  ['Caps','aA','sS','dD','fF','gG','hH','jJ','kK','lL',';:',"'\"",'Enter'],
-  ['Shift','zZ','xX','cC','vV','bB','nN','mM',',<','.>','/?','Shift'],
-  ['Space'],
-];
-const KW = { Backspace: 2, Tab: 1.5, '\\|': 1.5, Caps: 1.8, Enter: 2.2, Shift: 2.4, Space: 7 };
-const FINGER = [['#fde3ec','`1qaz'],['#ffefd2','2wsx'],['#e2f5de','3edc'],['#dcecff','4rfv5tgb6yhn7ujm'],
-  ['#e2f5de','8ik,'],['#ffefd2','9ol.'],['#fde3ec',"0-=p[]\\;'/"],['#eeeeee',' ']];
-const tintOf = (c) => { for (const [t, cs] of FINGER) if (cs.includes(c)) return t; return '#f4f6fa'; };
-const keyEl = {}, shiftEls = [], needShift = new Set();
-let hl = [], nextCh = null;
-(function buildKeyboard() {
-  const kb = $('kb');
-  KB.forEach((row) => {
-    const r = document.createElement('div'); r.className = 'kr';
-    row.forEach((k, idx) => {
-      const d = document.createElement('div'); d.className = 'k'; d.style.flex = k === 'Space' ? '0 0 52%' : (KW[k] || 1) + ' 1 0';
-      if (k.length === 2) {
-        const a = k[0], b = k[1];
-        d.innerHTML = /[a-z]/.test(a) ? esc(b) : '<small>' + esc(b) + '</small>' + esc(a);
-        d.style.setProperty('--f', tintOf(a));
-        keyEl[a] = d; keyEl[b] = d; needShift.add(b); if (idx <= 5) d.dataset.left = '1';
-      } else {
-        d.textContent = k === 'Space' ? '' : k;
-        d.style.setProperty('--f', k === 'Space' ? '#eeeeee' : '#fde3ec');
-        if (k === 'Shift') shiftEls.push(d); else if (k === 'Space') keyEl[' '] = d; else keyEl[k] = d;
+    .big {
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.02em
+    }
+
+    .winner {
+      background: #fff7e0;
+      border: 1px solid #f1d98a;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin: 18px 0;
+      font-weight: 700
+    }
+
+    .join {
+      max-width: 480px;
+      margin: 40px auto
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none
+    }
+
+    #s-join input {
+      -webkit-user-select: text;
+      user-select: text
+    }
+
+    @media print {
+      body {
+        display: none !important
       }
-      r.appendChild(d);
+    }
+
+    .type {
+      height: 212px
+    }
+
+    .kb {
+      margin: 18px auto 0;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      user-select: none
+    }
+
+    .kb.off {
+      display: none
+    }
+
+    .kb .kr {
+      display: flex;
+      gap: 6px;
+      justify-content: center
+    }
+
+    .kb .k {
+      flex: 1 1 0;
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid rgba(20, 33, 61, .12);
+      border-bottom-width: 3px;
+      background: var(--f, #f4f6fa);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.05;
+      color: #33415c;
+      transition: background .08s, transform .08s
+    }
+
+    .kb .k small {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6f7f99
+    }
+
+    .kb .k.next {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand-d);
+      box-shadow: 0 0 0 3px rgba(43, 108, 240, .25)
+    }
+
+    .kb .k.next small {
+      color: #dbe7ff
+    }
+
+    .kb .k.hit {
+      background: #bff0d4;
+      color: #14213d
+    }
+
+    .kb .k.miss {
+      background: #ffc2cb;
+      color: #14213d
+    }
+
+    .kb .k.hit,
+    .kb .k.miss {
+      transform: translateY(2px)
+    }
+
+    .hdr-btns {
+      display: flex;
+      gap: 8px
+    }
+
+    @media(max-width:760px) {
+      .kb {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="top">
+    <div class="brand">Innovista <i>TypeSprint</i></div>
+    <div class="hdr-btns"><button id="kbBtn" class="ghost" type="button">Keyboard on</button><button id="mute"
+        class="ghost" type="button">Sound on</button></div>
+  </header>
+
+  <main class="wrap">
+    <!-- JOIN -->
+    <section id="s-join" class="card join">
+      <h1>Join the race</h1>
+      <p class="muted">Enter your name and the join code from the big screen. The host starts the round for everyone at
+        the same time.</p>
+      <label for="name">Your name</label>
+      <input id="name" type="text" maxlength="24" autocomplete="off">
+      <label for="code">Join code (ask the host)</label>
+      <input id="code" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false"
+        style="text-transform:uppercase;letter-spacing:.15em;font-weight:700">
+      <label for="roll">Roll number or team (optional)</label>
+      <input id="roll" type="text" maxlength="20" autocomplete="off">
+      <div id="err" class="err"></div>
+      <button id="joinBtn" type="button" style="width:100%">Join</button>
+    </section>
+
+    <!-- LOBBY -->
+    <section id="s-lobby" class="card center" hidden>
+      <h1>You are in!</h1>
+      <p class="muted">Waiting for the host to start round <b id="round">1</b>. Keep this page open.</p>
+      <div class="big num" id="count">0</div>
+      <p class="muted">players in the lobby</p>
+      <p class="muted">Tip: place your fingers on the home row and sit comfortably.</p>
+    </section>
+
+    <!-- PLAY -->
+    <section id="s-play" hidden>
+      <div class="stats">
+        <div class="stat"><b id="time" class="num">0:00</b><span>Time left</span></div>
+        <div class="stat"><b id="wpm" class="num">0</b><span>WPM</span></div>
+        <div class="stat"><b id="acc" class="num">100%</b><span>Accuracy</span></div>
+        <div class="stat"><b id="rank" class="num">-</b><span>Your rank</span></div>
+      </div>
+      <div class="type">
+        <div id="para"></div>
+        <textarea id="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          disabled></textarea>
+        <div id="hint" class="hint" hidden>Click here to keep typing</div>
+        <div id="cd" class="cd"><span class="muted">Get ready</span><b id="cdn">5</b></div>
+      </div>
+      <div class="bar">
+        <div id="prog"></div>
+      </div>
+      <div id="kb" class="kb" aria-hidden="true"></div>
+      <p id="rules" class="muted center" style="font-size:14px;margin-top:14px">Copy, paste and shortcuts are disabled.
+        Leaving this page is recorded and shown to the host.</p>
+      <p id="done" class="muted center" hidden></p>
+    </section>
+
+    <!-- SPECTATOR -->
+    <section id="s-out" class="card center" hidden>
+      <h1>You are watching this round</h1>
+      <p class="muted">Only the qualified players are typing now. Follow the live leaderboard on the big screen.</p>
+    </section>
+
+    <!-- RESULT -->
+    <section id="s-result" class="card center" hidden>
+      <p class="muted" style="margin:0">Round finished</p>
+      <div class="big" id="r-rank">#1</div>
+      <p class="muted" id="r-of"></p>
+      <div class="stats" style="justify-content:center">
+        <div class="stat"><b id="r-wpm" class="num">0</b><span>Net WPM</span></div>
+        <div class="stat"><b id="r-acc" class="num">0%</b><span>Accuracy</span></div>
+      </div>
+      <div class="winner" id="r-win"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>WPM</th>
+            <th>Accuracy</th>
+          </tr>
+        </thead>
+        <tbody id="r-top"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="sound.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36); // crypto.randomUUID needs HTTPS, so not used
+    const fmt = (ms) => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+    const screens = ['s-join', 's-lobby', 's-play', 's-out', 's-result'];
+    const show = (id) => screens.forEach((s) => { $(s).hidden = s !== id; });
+
+    const socket = io();
+    let pid = localStorage.getItem('pid') || uid();
+    localStorage.setItem('pid', pid);
+    let me = { name: localStorage.getItem('name') || '', roll: localStorage.getItem('roll') || '', code: localStorage.getItem('code') || '' };
+    $('name').value = me.name; $('roll').value = me.roll; $('code').value = me.code;
+
+    let joined = false, active = true, state = null, offset = 0, pendingResume = null;
+    let text = '', chars = [], typed = '', keys = 0, mistakes = 0;
+    let locked = true, started = false, ended = false, finAt = 0, lastN = null, roundKey = '', dirty = false;
+    const inp = $('inp'), para = $('para');
+
+    // ----- sound button -----
+    const muteLabel = () => { $('mute').textContent = Snd.isMuted() ? 'Sound off' : 'Sound on'; };
+    $('mute').onclick = () => { Snd.toggle(); muteLabel(); };
+    muteLabel();
+
+    // ----- on-screen keyboard (next key is highlighted, pressed keys flash) -----
+    const KB = [
+      ['`~', '1!', '2@', '3#', '4$', '5%', '6^', '7&', '8*', '9(', '0)', '-_', '=+', 'Backspace'],
+      ['Tab', 'qQ', 'wW', 'eE', 'rR', 'tT', 'yY', 'uU', 'iI', 'oO', 'pP', '[{', ']}', '\\|'],
+      ['Caps', 'aA', 'sS', 'dD', 'fF', 'gG', 'hH', 'jJ', 'kK', 'lL', ';:', "'\"", 'Enter'],
+      ['Shift', 'zZ', 'xX', 'cC', 'vV', 'bB', 'nN', 'mM', ',<', '.>', '/?', 'Shift'],
+      ['Space'],
+    ];
+    const KW = { Backspace: 2, Tab: 1.5, '\\|': 1.5, Caps: 1.8, Enter: 2.2, Shift: 2.4, Space: 7 };
+    const FINGER = [['#fde3ec', '`1qaz'], ['#ffefd2', '2wsx'], ['#e2f5de', '3edc'], ['#dcecff', '4rfv5tgb6yhn7ujm'],
+    ['#e2f5de', '8ik,'], ['#ffefd2', '9ol.'], ['#fde3ec', "0-=p[]\\;'/"], ['#eeeeee', ' ']];
+    const tintOf = (c) => { for (const [t, cs] of FINGER) if (cs.includes(c)) return t; return '#f4f6fa'; };
+    const keyEl = {}, shiftEls = [], needShift = new Set();
+    let hl = [], nextCh = null;
+    (function buildKeyboard() {
+      const kb = $('kb');
+      KB.forEach((row) => {
+        const r = document.createElement('div'); r.className = 'kr';
+        row.forEach((k, idx) => {
+          const d = document.createElement('div'); d.className = 'k'; d.style.flex = k === 'Space' ? '0 0 52%' : (KW[k] || 1) + ' 1 0';
+          if (k.length === 2) {
+            const a = k[0], b = k[1];
+            d.innerHTML = /[a-z]/.test(a) ? esc(b) : '<small>' + esc(b) + '</small>' + esc(a);
+            d.style.setProperty('--f', tintOf(a));
+            keyEl[a] = d; keyEl[b] = d; needShift.add(b); if (idx <= 5) d.dataset.left = '1';
+          } else {
+            d.textContent = k === 'Space' ? '' : k;
+            d.style.setProperty('--f', k === 'Space' ? '#eeeeee' : '#fde3ec');
+            if (k === 'Shift') shiftEls.push(d); else if (k === 'Space') keyEl[' '] = d; else keyEl[k] = d;
+          }
+          r.appendChild(d);
+        });
+        kb.appendChild(r);
+      });
+    })();
+    function setNext(ch) {
+      if (ch === nextCh) return;
+      nextCh = ch;
+      hl.forEach((e) => e.classList.remove('next')); hl = [];
+      if (ch == null || !keyEl[ch]) return;
+      hl.push(keyEl[ch]);
+      if (needShift.has(ch)) hl.push(keyEl[ch].dataset.left ? shiftEls[1] : shiftEls[0]);
+      hl.forEach((e) => e.classList.add('next'));
+    }
+    function flash(el, cls) { if (!el) return; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 140); }
+    let kbOn = localStorage.getItem('kb') !== '0';
+    const kbApply = () => { $('kb').classList.toggle('off', !kbOn); $('kbBtn').textContent = kbOn ? 'Keyboard on' : 'Keyboard off'; };
+    $('kbBtn').onclick = () => { kbOn = !kbOn; localStorage.setItem('kb', kbOn ? '1' : '0'); kbApply(); };
+    kbApply();
+
+    // ----- join -----
+    function doJoin() {
+      socket.emit('join', { pid, name: me.name, roll: me.roll, code: me.code }, (res) => {
+        if (!res.ok) { joined = false; $('err').textContent = res.error; show('s-join'); return; }
+        joined = true; active = !res.eliminated; pendingResume = res.resume || null;
+        if (!active) show('s-out'); else if (!state || state.phase === 'lobby') show('s-lobby');
+      });
+    }
+    $('joinBtn').onclick = () => {
+      const name = $('name').value.trim();
+      if (!name) { $('err').textContent = 'Please enter your name'; return; }
+      Snd.unlock();
+      const code = $('code').value.trim().toUpperCase();
+      if (!code) { $('err').textContent = 'Enter the join code shown on the big screen'; return; }
+      me = { name, roll: $('roll').value.trim(), code };
+      localStorage.setItem('name', me.name); localStorage.setItem('roll', me.roll); localStorage.setItem('code', me.code);
+      $('err').textContent = '';
+      doJoin();
+    };
+    ['name', 'code', 'roll'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('joinBtn').click(); }));
+    socket.on('connect', () => { if (joined) doJoin(); }); // auto re-join after a network blip
+
+    // ----- server events -----
+    socket.on('state', (s) => {
+      state = s; offset = s.serverNow - Date.now();
+      $('count').textContent = s.count; $('round').textContent = s.round;
+      if (!joined || !active) return;
+      if (s.phase === 'lobby') { pendingResume = null; resetPlay(); show('s-lobby'); }
+      else if (s.phase === 'countdown' || s.phase === 'running') {
+        const key = s.round + ':' + s.startAt;
+        if (key !== roundKey) { roundKey = key; text = s.text; setupRound(); } else { pendingResume = null; }
+        show('s-play');
+      }
     });
-    kb.appendChild(r);
-  });
-})();
-function setNext(ch) {
-  if (ch === nextCh) return;
-  nextCh = ch;
-  hl.forEach((e) => e.classList.remove('next')); hl = [];
-  if (ch == null || !keyEl[ch]) return;
-  hl.push(keyEl[ch]);
-  if (needShift.has(ch)) hl.push(keyEl[ch].dataset.left ? shiftEls[1] : shiftEls[0]);
-  hl.forEach((e) => e.classList.add('next'));
-}
-function flash(el, cls) { if (!el) return; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 140); }
-let kbOn = localStorage.getItem('kb') !== '0';
-const kbApply = () => { $('kb').classList.toggle('off', !kbOn); $('kbBtn').textContent = kbOn ? 'Keyboard on' : 'Keyboard off'; };
-$('kbBtn').onclick = () => { kbOn = !kbOn; localStorage.setItem('kb', kbOn ? '1' : '0'); kbApply(); };
-kbApply();
+    socket.on('status', (s) => { active = s.active; if (!active && joined) show('s-out'); });
+    socket.on('me', (m) => { $('rank').textContent = '#' + m.rank + ' / ' + m.total; });
+    socket.on('kicked', () => {
+      joined = false; active = true; pid = uid(); localStorage.setItem('pid', pid);
+      resetPlay(); roundKey = ''; show('s-join');
+    });
+    socket.on('results', (r) => {
+      if (!joined || !active) return;
+      locked = true; inp.disabled = true;
+      const m = r.me;
+      $('r-rank').textContent = '#' + m.rank;
+      $('r-of').textContent = 'out of ' + r.total + ' players';
+      $('r-wpm').textContent = m.wpm; $('r-acc').textContent = m.acc + '%';
+      $('r-win').textContent = r.winner ? 'Winner: ' + r.winner.name + ' with ' + r.winner.wpm + ' WPM' : '';
+      $('r-top').innerHTML = r.top.map((t) =>
+        '<tr class="' + (t.rank === m.rank ? 'me' : '') + '"><td>' + t.rank + '</td><td>' + esc(t.name) +
+        '</td><td class="num">' + t.wpm + '</td><td class="num">' + t.acc + '%</td></tr>').join('');
+      show('s-result');
+      if (m.rank === 1) Snd.win();
+    });
 
-// ----- join -----
-function doJoin() {
-  socket.emit('join', { pid, name: me.name, roll: me.roll, code: me.code }, (res) => {
-    if (!res.ok) { joined = false; $('err').textContent = res.error; show('s-join'); return; }
-    joined = true; active = !res.eliminated; pendingResume = res.resume || null;
-    if (!active) show('s-out'); else if (!state || state.phase === 'lobby') show('s-lobby');
-  });
-}
-$('joinBtn').onclick = () => {
-  const name = $('name').value.trim();
-  if (!name) { $('err').textContent = 'Please enter your name'; return; }
-  Snd.unlock();
-  const code = $('code').value.trim().toUpperCase();
-  if (!code) { $('err').textContent = 'Enter the join code shown on the big screen'; return; }
-  me = { name, roll: $('roll').value.trim(), code };
-  localStorage.setItem('name', me.name); localStorage.setItem('roll', me.roll); localStorage.setItem('code', me.code);
-  $('err').textContent = '';
-  doJoin();
-};
-['name', 'code', 'roll'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('joinBtn').click(); }));
-socket.on('connect', () => { if (joined) doJoin(); }); // auto re-join after a network blip
+    // ----- typing -----
+    function resetPlay() { locked = true; inp.disabled = true; roundKey = ''; }
 
-// ----- server events -----
-socket.on('state', (s) => {
-  state = s; offset = s.serverNow - Date.now();
-  $('count').textContent = s.count; $('round').textContent = s.round;
-  if (!joined || !active) return;
-  if (s.phase === 'lobby') { pendingResume = null; resetPlay(); show('s-lobby'); }
-  else if (s.phase === 'countdown' || s.phase === 'running') {
-    const key = s.round + ':' + s.startAt;
-    if (key !== roundKey) { roundKey = key; text = s.text; setupRound(); } else { pendingResume = null; }
-    show('s-play');
-  }
-});
-socket.on('status', (s) => { active = s.active; if (!active && joined) show('s-out'); });
-socket.on('me', (m) => { $('rank').textContent = '#' + m.rank + ' / ' + m.total; });
-socket.on('kicked', () => {
-  joined = false; active = true; pid = uid(); localStorage.setItem('pid', pid);
-  resetPlay(); roundKey = ''; show('s-join');
-});
-socket.on('results', (r) => {
-  if (!joined || !active) return;
-  locked = true; inp.disabled = true;
-  const m = r.me;
-  $('r-rank').textContent = '#' + m.rank;
-  $('r-of').textContent = 'out of ' + r.total + ' players';
-  $('r-wpm').textContent = m.wpm; $('r-acc').textContent = m.acc + '%';
-  $('r-win').textContent = r.winner ? 'Winner: ' + r.winner.name + ' with ' + r.winner.wpm + ' WPM' : '';
-  $('r-top').innerHTML = r.top.map((t) =>
-    '<tr class="' + (t.rank === m.rank ? 'me' : '') + '"><td>' + t.rank + '</td><td>' + esc(t.name) +
-    '</td><td class="num">' + t.wpm + '</td><td class="num">' + t.acc + '%</td></tr>').join('');
-  show('s-result');
-  if (m.rank === 1) Snd.win();
-});
+    function setupRound() {
+      typed = ''; keys = 0; mistakes = 0; started = false; ended = false; finAt = 0; lastN = null; dirty = false;
+      locked = true; inp.disabled = true; inp.value = '';
+      para.innerHTML = '';
+      chars = text.split('').map((ch) => { const s = document.createElement('span'); s.textContent = ch; para.appendChild(s); return s; });
+      if (pendingResume) {
+        typed = pendingResume.typed; keys = pendingResume.keys; mistakes = pendingResume.mistakes;
+        inp.value = typed; if (typed.length >= text.length) finAt = Date.now() + offset;
+        pendingResume = null;
+      }
+      $('cd').hidden = false; $('done').hidden = true; $('rank').textContent = '-';
+      render(); para.scrollTop = 0; updStats();
+    }
 
-// ----- typing -----
-function resetPlay() { locked = true; inp.disabled = true; roundKey = ''; }
+    function render() {
+      for (let i = 0; i < chars.length; i++) {
+        const cls = i < typed.length ? (typed[i] === text[i] ? 'ok' : 'bad') : (i === typed.length ? 'cur' : '');
+        if (chars[i].className !== cls) chars[i].className = cls;
+      }
+      setNext(!locked && typed.length < text.length ? text[typed.length] : null);
+      const c = chars[Math.min(typed.length, chars.length - 1)];
+      if (c) para.scrollTop = Math.max(0, c.offsetTop - para.clientHeight / 3);
+    }
 
-function setupRound() {
-  typed = ''; keys = 0; mistakes = 0; started = false; ended = false; finAt = 0; lastN = null; dirty = false;
-  locked = true; inp.disabled = true; inp.value = '';
-  para.innerHTML = '';
-  chars = text.split('').map((ch) => { const s = document.createElement('span'); s.textContent = ch; para.appendChild(s); return s; });
-  if (pendingResume) {
-    typed = pendingResume.typed; keys = pendingResume.keys; mistakes = pendingResume.mistakes;
-    inp.value = typed; if (typed.length >= text.length) finAt = Date.now() + offset;
-    pendingResume = null;
-  }
-  $('cd').hidden = false; $('done').hidden = true; $('rank').textContent = '-';
-  render(); para.scrollTop = 0; updStats();
-}
+    function updStats() {
+      if (!state || !text) return;
+      let c = 0;
+      for (let i = 0; i < typed.length; i++) if (typed[i] === text[i]) c++;
+      const end = finAt || Math.min(Date.now() + offset, state.endAt);
+      const mins = Math.max(end - state.startAt, 3000) / 60000;
+      $('wpm').textContent = started ? Math.round(c / 5 / mins) : 0;
+      $('acc').textContent = keys ? Math.round(((keys - mistakes) / keys) * 100) + '%' : '100%';
+      $('prog').style.width = (c / text.length) * 100 + '%';
+    }
 
-function render() {
-  for (let i = 0; i < chars.length; i++) {
-    const cls = i < typed.length ? (typed[i] === text[i] ? 'ok' : 'bad') : (i === typed.length ? 'cur' : '');
-    if (chars[i].className !== cls) chars[i].className = cls;
-  }
-  setNext(!locked && typed.length < text.length ? text[typed.length] : null);
-  const c = chars[Math.min(typed.length, chars.length - 1)];
-  if (c) para.scrollTop = Math.max(0, c.offsetTop - para.clientHeight / 3);
-}
+    function flush() {
+      if (!joined) return;
+      socket.emit('progress', { typed, keys, mistakes });
+      dirty = false;
+    }
+    setInterval(() => { if (dirty && started && !ended) flush(); }, 300);
 
-function updStats() {
-  if (!state || !text) return;
-  let c = 0;
-  for (let i = 0; i < typed.length; i++) if (typed[i] === text[i]) c++;
-  const end = finAt || Math.min(Date.now() + offset, state.endAt);
-  const mins = Math.max(end - state.startAt, 3000) / 60000;
-  $('wpm').textContent = started ? Math.round(c / 5 / mins) : 0;
-  $('acc').textContent = keys ? Math.round(((keys - mistakes) / keys) * 100) + '%' : '100%';
-  $('prog').style.width = (c / text.length) * 100 + '%';
-}
+    inp.addEventListener('input', (e) => {
+      if (!e.isTrusted) { inp.value = typed; return; } // ignore script-generated input
+      if (locked) { inp.value = typed; return; }
+      const v = inp.value.replace(/[\r\n]/g, '').slice(0, text.length);
+      if (v.length > typed.length + 1) { inp.value = typed; return; } // blocks pasted/burst text
+      if (v.length > typed.length) {
+        keys++;
+        const i = v.length - 1;
+        if (v[i] !== text[i]) { mistakes++; Snd.err(); flash(keyEl[v[i]], 'miss'); } else { Snd.key(); flash(keyEl[v[i]], 'hit'); }
+      } else if (v.length < typed.length) { Snd.back(); flash(keyEl['Backspace'], 'hit'); }
+      typed = v; inp.value = v; dirty = true;
+      render(); updStats();
+      if (typed.length >= text.length) {
+        finAt = Date.now() + offset; locked = true; inp.disabled = true; setNext(null); flush();
+        $('done').hidden = false; $('done').textContent = 'Finished! Waiting for the other players...';
+        Snd.win(); updStats();
+      }
+    });
+    inp.addEventListener('beforeinput', (e) => {
+      if (/paste|drop|cut|historyUndo|historyRedo|replacement|formatBold|insertFromYank/i.test(e.inputType || '')) e.preventDefault();
+    });
 
-function flush() {
-  if (!joined) return;
-  socket.emit('progress', { typed, keys, mistakes });
-  dirty = false;
-}
-setInterval(() => { if (dirty && started && !ended) flush(); }, 300);
+    // ----- anti-cheat: block copy/paste/drag/right-click everywhere except the join form -----
+    const inJoinForm = (e) => { const t = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement; return !!(t && t.closest && t.closest('#s-join')); };
+    ['copy', 'cut', 'paste', 'contextmenu', 'dragstart', 'drag', 'drop', 'dragover', 'selectstart']
+      .forEach((ev) => document.addEventListener(ev, (e) => { if (!inJoinForm(e)) e.preventDefault(); }, true));
+    document.addEventListener('keydown', (e) => {
+      if ($('s-join').hidden === false) return; // allow normal keys while joining
+      const k = (e.key || '').toLowerCase(), mod = e.ctrlKey || e.metaKey;
+      if (e.key === 'F12' || (mod && ['c', 'v', 'x', 'a', 's', 'p', 'u', 'f', 'g', 'z', 'y'].includes(k)) ||
+        (mod && e.shiftKey && ['i', 'j', 'c', 'k', 'v'].includes(k)) || (mod && e.altKey && ['i', 'j', 'c', 'u'].includes(k))) e.preventDefault();
+    }, true);
 
-inp.addEventListener('input', (e) => {
-  if (!e.isTrusted) { inp.value = typed; return; } // ignore script-generated input
-  if (locked) { inp.value = typed; return; }
-  const v = inp.value.replace(/[\r\n]/g, '').slice(0, text.length);
-  if (v.length > typed.length + 1) { inp.value = typed; return; } // blocks pasted/burst text
-  if (v.length > typed.length) {
-    keys++;
-    const i = v.length - 1;
-    if (v[i] !== text[i]) { mistakes++; Snd.err(); flash(keyEl[v[i]], 'miss'); } else { Snd.key(); flash(keyEl[v[i]], 'hit'); }
-  } else if (v.length < typed.length) { Snd.back(); flash(keyEl['Backspace'], 'hit'); }
-  typed = v; inp.value = v; dirty = true;
-  render(); updStats();
-  if (typed.length >= text.length) {
-    finAt = Date.now() + offset; locked = true; inp.disabled = true; setNext(null); flush();
-    $('done').hidden = false; $('done').textContent = 'Finished! Waiting for the other players...';
-    Snd.win(); updStats();
-  }
-});
-inp.addEventListener('beforeinput', (e) => {
-  if (/paste|drop|cut|historyUndo|historyRedo|replacement|formatBold|insertFromYank/i.test(e.inputType || '')) e.preventDefault();
-});
+    // ----- anti-cheat: tell the server when the player leaves the page during a round -----
+    let away = false;
+    function goneAway() { if (away || !started || ended || finAt) return; away = true; socket.emit('away'); }
+    window.addEventListener('blur', goneAway);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) goneAway(); });
+    window.addEventListener('focus', () => { away = false; });
+    inp.addEventListener('select', () => inp.setSelectionRange(inp.value.length, inp.value.length));
+    inp.addEventListener('keydown', (e) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Delete'].includes(e.key) ||
+        (mod && ['a', 'v', 'x', 'z', 'y', 'c'].includes(e.key.toLowerCase()))) e.preventDefault();
+    });
+    inp.addEventListener('blur', () => { if (!locked) $('hint').hidden = false; });
+    inp.addEventListener('focus', () => { $('hint').hidden = true; });
+    document.addEventListener('click', () => { if (!locked && !inp.disabled) inp.focus(); });
 
-// ----- anti-cheat: block copy/paste/drag/right-click everywhere except the join form -----
-const inJoinForm = (e) => { const t = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement; return !!(t && t.closest && t.closest('#s-join')); };
-['copy', 'cut', 'paste', 'contextmenu', 'dragstart', 'drag', 'drop', 'dragover', 'selectstart']
-  .forEach((ev) => document.addEventListener(ev, (e) => { if (!inJoinForm(e)) e.preventDefault(); }, true));
-document.addEventListener('keydown', (e) => {
-  if ($('s-join').hidden === false) return; // allow normal keys while joining
-  const k = (e.key || '').toLowerCase(), mod = e.ctrlKey || e.metaKey;
-  if (e.key === 'F12' || (mod && ['c', 'v', 'x', 'a', 's', 'p', 'u', 'f', 'g', 'z', 'y'].includes(k)) ||
-      (mod && e.shiftKey && ['i', 'j', 'c', 'k', 'v'].includes(k)) || (mod && e.altKey && ['i', 'j', 'c', 'u'].includes(k))) e.preventDefault();
-}, true);
-
-// ----- anti-cheat: tell the server when the player leaves the page during a round -----
-let away = false;
-function goneAway() { if (away || !started || ended || finAt) return; away = true; socket.emit('away'); }
-window.addEventListener('blur', goneAway);
-document.addEventListener('visibilitychange', () => { if (document.hidden) goneAway(); });
-window.addEventListener('focus', () => { away = false; });
-inp.addEventListener('select', () => inp.setSelectionRange(inp.value.length, inp.value.length));
-inp.addEventListener('keydown', (e) => {
-  const mod = e.ctrlKey || e.metaKey;
-  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Delete'].includes(e.key) ||
-      (mod && ['a', 'v', 'x', 'z', 'y', 'c'].includes(e.key.toLowerCase()))) e.preventDefault();
-});
-inp.addEventListener('blur', () => { if (!locked) $('hint').hidden = false; });
-inp.addEventListener('focus', () => { $('hint').hidden = true; });
-document.addEventListener('click', () => { if (!locked && !inp.disabled) inp.focus(); });
-
-// ----- clock: countdown, timer, lock at end -----
-setInterval(() => {
-  if (!joined || !active || !state || !roundKey) return;
-  if (state.phase !== 'countdown' && state.phase !== 'running') return;
-  const now = Date.now() + offset;
-  if (now < state.startAt) {
-    const n = Math.ceil((state.startAt - now) / 1000);
-    $('cdn').textContent = n; $('time').textContent = fmt(state.duration * 1000);
-    if (n !== lastN) { lastN = n; Snd.beep(false); }
-    return;
-  }
-  if (!started) {
-    started = true; $('cd').hidden = true; Snd.beep(true);
-    if (typed.length < text.length) { locked = false; inp.disabled = false; inp.focus(); render(); }
-    else { $('done').hidden = false; $('done').textContent = 'Finished! Waiting for the other players...'; }
-  }
-  const left = Math.max(0, state.endAt - now);
-  $('time').textContent = fmt(left);
-  if (left <= 0 && !ended) {
-    ended = true; locked = true; inp.disabled = true; $('hint').hidden = true; setNext(null);
-    flush(); Snd.end();
-    if (!finAt) { $('done').hidden = false; $('done').textContent = "Time's up! Calculating results..."; }
-  }
-  if (!ended) updStats();
-}, 100);
-</script>
+    // ----- clock: countdown, timer, lock at end -----
+    setInterval(() => {
+      if (!joined || !active || !state || !roundKey) return;
+      if (state.phase !== 'countdown' && state.phase !== 'running') return;
+      const now = Date.now() + offset;
+      if (now < state.startAt) {
+        const n = Math.ceil((state.startAt - now) / 1000);
+        $('cdn').textContent = n; $('time').textContent = fmt(state.duration * 1000);
+        if (n !== lastN) { lastN = n; Snd.beep(false); }
+        return;
+      }
+      if (!started) {
+        started = true; $('cd').hidden = true; Snd.beep(true);
+        if (typed.length < text.length) { locked = false; inp.disabled = false; inp.focus(); render(); }
+        else { $('done').hidden = false; $('done').textContent = 'Finished! Waiting for the other players...'; }
+      }
+      const left = Math.max(0, state.endAt - now);
+      $('time').textContent = fmt(left);
+      if (left <= 0 && !ended) {
+        ended = true; locked = true; inp.disabled = true; $('hint').hidden = true; setNext(null);
+        flush(); Snd.end();
+        if (!finAt) { $('done').hidden = false; $('done').textContent = "Time's up! Calculating results..."; }
+      }
+      if (!ended) updStats();
+    }, 100);
+  </script>
 </body>
+
 </html>

@@ -302,7 +302,7 @@ app.get('/results.csv', (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log('\nInnovista Type Rush is running\n');
+  console.log('\nInnovista TypeSprint is running\n');
   console.log('  Players  : http://localhost:' + PORT);
   console.log('  Admin    : http://localhost:' + PORT + '/admin   (password: ' + ADMIN_PASS + ')');
   console.log('  Big screen: http://localhost:' + PORT + '/screen');
