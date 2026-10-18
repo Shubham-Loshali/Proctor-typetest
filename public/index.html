@@ -135,31 +135,37 @@
     }
 
     .kb {
-      margin: 18px auto 0;
-      max-width: 880px;
+      margin: 20px auto 0;
+      max-width: 860px;
+      padding: 14px 16px;
+      background: #ded5cf;
+      border: 1px solid #cfc4bd;
+      border-radius: 18px;
+      box-shadow: 0 12px 28px -4px rgba(20, 33, 61, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.7);
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      user-select: none
+      gap: 7px;
+      user-select: none;
     }
 
     .kb.off {
-      display: none
+      display: none;
     }
 
     .kb .kr {
       display: flex;
-      gap: 6px;
-      justify-content: center
+      gap: 7px;
+      justify-content: center;
     }
 
     .kb .k {
       flex: 1 1 0;
-      height: 42px;
+      height: 44px;
       border-radius: 8px;
-      border: 1px solid rgba(20, 33, 61, .12);
-      border-bottom-width: 3px;
-      background: var(--f, #f4f6fa);
+      border: 1px solid #dcd4cb;
+      border-bottom: 3.5px solid #c8beaf;
+      background: #fbf7f2;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -167,50 +173,79 @@
       font-size: 14px;
       font-weight: 600;
       line-height: 1.05;
-      color: #33415c;
-      transition: background .08s, transform .08s
+      color: #2b2927;
+      transition: background .08s, transform .08s, border-color .08s, box-shadow .08s;
+      cursor: default;
     }
 
     .kb .k small {
       font-size: 10px;
       font-weight: 600;
-      color: #6f7f99
+      color: #79716b;
+      margin-bottom: 1px;
     }
 
+    /* Modifier Keys: Dark Charcoal with Rose/Blush Legends */
+    .kb .k.mod {
+      background: #2b2b2b;
+      border: 1px solid #222222;
+      border-bottom: 3.5px solid #161616;
+      color: #f1b5a8;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .kb .k.mod small {
+      color: #df9e91;
+    }
+
+    /* Accent Key (Spacebar): Dusty Blush Rose / Peach */
+    .kb .k.accent {
+      background: #f4bbae;
+      border: 1px solid #e2a694;
+      border-bottom: 3.5px solid #cb8a78;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    /* Active Next Key highlight */
     .kb .k.next {
-      background: var(--brand);
-      color: #fff;
-      border-color: var(--brand-d);
-      box-shadow: 0 0 0 3px rgba(43, 108, 240, .25)
+      background: #f4bbae !important;
+      color: #1c1917 !important;
+      border-color: #e59f8e !important;
+      border-bottom-color: #cc8473 !important;
+      box-shadow: 0 0 0 3px rgba(244, 187, 174, 0.65), 0 4px 14px rgba(244, 187, 174, 0.45) !important;
+      transform: translateY(-1px);
     }
 
     .kb .k.next small {
-      color: #dbe7ff
+      color: #3b2a26 !important;
     }
 
+    /* Physical Keypress animations */
     .kb .k.hit {
-      background: #bff0d4;
-      color: #14213d
+      background: #bbf7d0 !important;
+      color: #064e3b !important;
+      border-bottom-width: 1px !important;
+      transform: translateY(2.5px);
     }
 
     .kb .k.miss {
-      background: #ffc2cb;
-      color: #14213d
-    }
-
-    .kb .k.hit,
-    .kb .k.miss {
-      transform: translateY(2px)
+      background: #fecdd3 !important;
+      color: #881337 !important;
+      border-bottom-width: 1px !important;
+      transform: translateY(2.5px);
     }
 
     .hdr-btns {
       display: flex;
-      gap: 8px
+      gap: 8px;
     }
 
     @media(max-width:760px) {
       .kb {
-        display: none
+        display: none;
       }
     }
   </style>
@@ -329,18 +364,16 @@
     $('mute').onclick = () => { Snd.toggle(); muteLabel(); };
     muteLabel();
 
-    // ----- on-screen keyboard (next key is highlighted, pressed keys flash) -----
+    // ----- on-screen keyboard (custom mechanical keyboard aesthetic) -----
     const KB = [
       ['`~', '1!', '2@', '3#', '4$', '5%', '6^', '7&', '8*', '9(', '0)', '-_', '=+', 'Backspace'],
       ['Tab', 'qQ', 'wW', 'eE', 'rR', 'tT', 'yY', 'uU', 'iI', 'oO', 'pP', '[{', ']}', '\\|'],
       ['Caps', 'aA', 'sS', 'dD', 'fF', 'gG', 'hH', 'jJ', 'kK', 'lL', ';:', "'\"", 'Enter'],
       ['Shift', 'zZ', 'xX', 'cC', 'vV', 'bB', 'nN', 'mM', ',<', '.>', '/?', 'Shift'],
-      ['Space'],
+      ['Ctrl', 'Alt', 'Space', 'Alt', 'Ctrl'],
     ];
-    const KW = { Backspace: 2, Tab: 1.5, '\\|': 1.5, Caps: 1.8, Enter: 2.2, Shift: 2.4, Space: 7 };
-    const FINGER = [['#fde3ec', '`1qaz'], ['#ffefd2', '2wsx'], ['#e2f5de', '3edc'], ['#dcecff', '4rfv5tgb6yhn7ujm'],
-    ['#e2f5de', '8ik,'], ['#ffefd2', '9ol.'], ['#fde3ec', "0-=p[]\\;'/"], ['#eeeeee', ' ']];
-    const tintOf = (c) => { for (const [t, cs] of FINGER) if (cs.includes(c)) return t; return '#f4f6fa'; };
+    const KW = { Backspace: 2.1, Tab: 1.5, '\\|': 1.5, Caps: 1.8, Enter: 2.2, Shift: 2.4, Ctrl: 1.6, Alt: 1.6, Space: 6.8 };
+    const MODS = new Set(['Backspace', 'Tab', 'Caps', 'Enter', 'Shift', 'Ctrl', 'Alt']);
     const keyEl = {}, shiftEls = [], needShift = new Set();
     let hl = [], nextCh = null;
     (function buildKeyboard() {
@@ -348,15 +381,15 @@
       KB.forEach((row) => {
         const r = document.createElement('div'); r.className = 'kr';
         row.forEach((k, idx) => {
-          const d = document.createElement('div'); d.className = 'k'; d.style.flex = k === 'Space' ? '0 0 52%' : (KW[k] || 1) + ' 1 0';
+          const d = document.createElement('div');
+          d.className = k === 'Space' ? 'k accent' : (MODS.has(k) ? 'k mod' : 'k');
+          d.style.flex = (KW[k] || 1) + ' 1 0';
           if (k.length === 2) {
             const a = k[0], b = k[1];
             d.innerHTML = /[a-z]/.test(a) ? esc(b) : '<small>' + esc(b) + '</small>' + esc(a);
-            d.style.setProperty('--f', tintOf(a));
             keyEl[a] = d; keyEl[b] = d; needShift.add(b); if (idx <= 5) d.dataset.left = '1';
           } else {
             d.textContent = k === 'Space' ? '' : k;
-            d.style.setProperty('--f', k === 'Space' ? '#eeeeee' : '#fde3ec');
             if (k === 'Shift') shiftEls.push(d); else if (k === 'Space') keyEl[' '] = d; else keyEl[k] = d;
           }
           r.appendChild(d);
