@@ -1,5 +1,5 @@
 {
-  "name": "innovista-type-rush",
+  "name": "innovista-TypeSprint",
   "version": "1.0.0",
   "description": "Multiplayer typing competition for a tech fest",
   "main": "server.js",
