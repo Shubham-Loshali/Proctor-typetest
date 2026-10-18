@@ -21,6 +21,7 @@
       inset: 0;
       padding: 22px 26px;
       overflow: hidden;
+      scroll-behavior: smooth;
       font-size: 26px;
       line-height: 1.7;
       white-space: pre-wrap;
@@ -585,6 +586,7 @@
     };
     $('kbBtn').onclick = () => { kbOn = !kbOn; localStorage.setItem('kb', kbOn ? '1' : '0'); kbApply(); };
     kbApply();
+    document.addEventListener('pointerdown', () => Snd.unlock(), { once: true });
 
     // ----- join -----
     function doJoin() {

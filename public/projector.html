@@ -166,7 +166,7 @@
 
     fetch('/api/info').then((r) => r.json()).then((d) => {
       joinUrl = (d.urls && d.urls[0]) || location.origin;
-      $('join').innerHTML = 'Join at <b style="color:var(--ink)">' + esc(joinUrl.replace('http://', '')) + '</b>';
+      $('join').innerHTML = 'Join at <b style="color:var(--ink)">' + esc(joinUrl.replace(/^https?:\/\//, '')) + '</b>';
     }).catch(() => { });
 
     let code = '';
