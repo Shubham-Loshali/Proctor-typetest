@@ -1,2 +1,2 @@
 # Proctor-typetest
-https://gehu.in/vHLAtv 
+https://gehu.in/typesprint
