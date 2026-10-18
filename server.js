@@ -254,7 +254,7 @@ io.on('connection', (socket) => {
     const text = cleanText(d && d.text);
     const dur = Math.round(Number(d && d.duration));
     if (text.length < 30) return cb({ ok: false, error: 'Paragraph is too short' });
-    if (!(dur >= 15 && dur <= 600)) return cb({ ok: false, error: 'Duration must be 15 to 600 seconds' });
+    if (!(dur >= 15 && dur <= 7200)) return cb({ ok: false, error: 'Duration must be 15 to 7200 seconds (up to 2 hours)' });
     game.text = text; game.duration = dur;
     cb({ ok: true, text, duration: dur });
   });
