@@ -1,0 +1,17 @@
+{
+  "name": "innovista-type-rush",
+  "version": "1.0.0",
+  "description": "Multiplayer typing competition for a tech fest",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "bots": "node test/bots.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.7.5"
+  }
+}

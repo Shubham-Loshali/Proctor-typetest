@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Innovista Type Rush - Admin</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .row-b{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .pill{display:inline-block;padding:4px 12px;border-radius:99px;background:#e6edf8;font-weight:700}
+  .pill.live{background:#dff5e9;color:var(--ok)}
+  .scroll{max-height:420px;overflow:auto}
+  .msg{min-height:24px;margin-top:10px;font-weight:600}
+  .msg.bad{color:var(--bad)} .msg.good{color:var(--ok)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Innovista <i>Type Rush</i> - Admin</div>
+  <div><span id="pill" class="pill">Offline</span></div>
+</header>
+
+<main class="wrap" style="max-width:1100px">
+  <section id="login" class="card" style="max-width:420px;margin:40px auto">
+    <h1>Admin login</h1>
+    <label for="pass">Password</label>
+    <input id="pass" type="password" autocomplete="off">
+    <div id="lerr" class="err"></div>
+    <button id="loginBtn" type="button" style="width:100%">Log in</button>
+  </section>
+
+  <div id="panel" hidden>
+    <div class="grid">
+      <section class="card">
+        <h2>Round settings</h2>
+        <label for="text">Paragraph (plain English, no line breaks needed)</label>
+        <textarea id="text" class="f"></textarea>
+        <div class="muted" id="tinfo" style="margin-top:6px"></div>
+        <label for="dur">Duration (seconds)</label>
+        <input id="dur" type="number" min="15" max="600" value="60" style="max-width:160px">
+        <div class="row-b">
+          <button id="save" type="button" class="ghost">Save settings</button>
+          <button id="start" type="button">Start round</button>
+          <button id="abort" type="button" class="danger">Abort round</button>
+        </div>
+        <div id="msg" class="msg"></div>
+      </section>
+
+      <section class="card">
+        <h2>Status</h2>
+        <p style="margin:0 0 6px">Round <b id="round">1</b> &middot; <b id="count">0</b> players &middot; <span id="phase">lobby</span></p>
+        <p class="muted" id="urls" style="margin:0 0 14px"></p>
+        <div style="background:#eaf1ff;border:1px solid #c9dcff;border-radius:12px;padding:14px 18px;margin-bottom:14px">
+          <div class="muted" style="font-size:14px">Join code (share this with participants)</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <b id="code" style="font-size:44px;letter-spacing:.18em;font-variant-numeric:tabular-nums">-----</b>
+            <button id="newcode" type="button" class="ghost">New code</button>
+          </div>
+        </div>
+        <label for="keep">Next round: keep only the top N players (0 = keep everyone)</label>
+        <input id="keep" type="number" min="0" value="0" style="max-width:160px">
+        <div class="row-b">
+          <button id="next" type="button" class="ghost">Next round</button>
+          <button id="clear" type="button" class="danger">Remove all players</button>
+        </div>
+        <div class="row-b">
+          <a id="csv" class="btn" href="#">Download results (CSV)</a>
+          <a class="btn" href="/screen" target="_blank" rel="noopener">Open big screen</a>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:20px">
+      <h2 id="ltitle">Live leaderboard</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Roll / team</th><th>WPM</th><th>Accuracy</th><th>Done</th><th>Tab switches</th><th>Flags</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="muted">Scores appear when a round starts.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const socket = io();
+let pass = sessionStorage.getItem('pass') || '', filled = false, phase = 'lobby';
+
+function say(t, good) { const m = $('msg'); m.textContent = t || ''; m.className = 'msg ' + (good ? 'good' : 'bad'); }
+function info() {
+  const t = $('text').value.replace(/\s+/g, ' ').trim();
+  const words = t ? t.split(' ').length : 0;
+  const need = Math.ceil((Number($('dur').value) || 60) / 60 * 130);
+  $('tinfo').textContent = words + ' words, ' + t.length + ' characters. For ' + $('dur').value + ' seconds, use at least ~' + need + ' words so fast typists do not run out.';
+}
+$('text').addEventListener('input', info); $('dur').addEventListener('input', info);
+
+function login(p) {
+  socket.emit('admin:login', p, (r) => {
+    if (!r.ok) { sessionStorage.removeItem('pass'); $('lerr').textContent = r.error || 'Login failed'; $('login').hidden = false; $('panel').hidden = true; return; }
+    pass = p; sessionStorage.setItem('pass', p);
+    $('login').hidden = true; $('panel').hidden = false; $('pill').textContent = 'Connected'; $('pill').className = 'pill live';
+    if (!filled) { $('text').value = r.text; $('dur').value = r.duration; filled = true; info(); }
+    $('urls').innerHTML = r.urls.length ? 'Players open: <b>' + r.urls.map(esc).join('</b> or <b>') + '</b>' : 'Players open this computer\'s IP address on port 3000';
+    $('csv').href = '/results.csv?pass=' + encodeURIComponent(p);
+    $('code').textContent = r.code;
+  });
+}
+$('loginBtn').onclick = () => login($('pass').value);
+$('pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') login($('pass').value); });
+socket.on('connect', () => { if (pass) login(pass); });
+socket.on('disconnect', () => { $('pill').textContent = 'Offline'; $('pill').className = 'pill'; });
+
+socket.on('adminCode', (c) => { $('code').textContent = c; });
+$('newcode').onclick = () => {
+  if (!confirm('Generate a new code? New players will need the new code (players already in keep their seat).')) return;
+  socket.emit('admin:newcode', (r) => say(r.ok ? 'New join code: ' + r.code : r.error, r.ok));
+};
+
+function buttons() {
+  $('start').disabled = phase !== 'lobby';
+  $('save').disabled = phase !== 'lobby';
+  $('abort').disabled = phase === 'lobby';
+  $('next').disabled = phase === 'countdown' || phase === 'running';
+  $('text').disabled = phase !== 'lobby'; $('dur').disabled = phase !== 'lobby';
+}
+socket.on('state', (s) => {
+  phase = s.phase;
+  $('round').textContent = s.round; $('count').textContent = s.count; $('phase').textContent = s.phase;
+  if (s.phase === 'lobby') { $('ltitle').textContent = 'Live leaderboard'; }
+  buttons();
+});
+
+function table(rows) {
+  $('rows').innerHTML = rows.length ? rows.map((r) =>
+    '<tr' + ((r.blurs >= 3 || r.flags > 0) ? ' style="background:#fff0f2"' : '') + '><td>' + r.rank + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.roll || '') + '</td><td class="num">' + r.wpm +
+    '</td><td class="num">' + r.acc + '%</td><td>' + (r.done ? 'yes' : '') + '</td><td>' + (r.blurs || '') + '</td><td>' + (r.flags || '') + '</td></tr>').join('')
+    : '<tr><td colspan="8" class="muted">No scores yet.</td></tr>';
+}
+socket.on('board', (b) => { if (phase === 'running') { $('ltitle').textContent = 'Live leaderboard (top 10)'; table(b.top); } });
+socket.on('adminResults', (r) => { $('ltitle').textContent = 'Final ranking, round ' + r.round + ' (all players)'; table(r.rows); });
+
+function call(ev, data) {
+  const cb = (r) => say(r.ok ? 'Done' : r.error, r.ok);
+  data === undefined ? socket.emit(ev, cb) : socket.emit(ev, data, cb);
+}
+$('save').onclick = () => socket.emit('admin:setup', { text: $('text').value, duration: $('dur').value }, (r) => {
+  if (r.ok) { $('text').value = r.text; $('dur').value = r.duration; info(); say('Settings saved', true); } else say(r.error);
+});
+$('start').onclick = () => socket.emit('admin:setup', { text: $('text').value, duration: $('dur').value }, (r) => {
+  if (!r.ok) return say(r.error);
+  $('text').value = r.text; info();
+  socket.emit('admin:start', (s) => say(s.ok ? 'Round started' : s.error, s.ok));
+});
+$('abort').onclick = () => { if (confirm('Abort this round and go back to the lobby?')) call('admin:abort'); };
+$('next').onclick = () => call('admin:next', { keepTop: $('keep').value });
+$('clear').onclick = () => { if (confirm('Remove every player? They will have to join again.')) call('admin:clear'); };
+buttons();
+</script>
+</body>
+</html>
