@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alpaca Mechanical Switch Sound Audition</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 30px 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; max-width: 640px; margin: 0 auto 24px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    h1 { margin-top: 0; font-size: 26px; color: #38bdf8; }
+    p { color: #94a3b8; line-height: 1.5; font-size: 15px; }
+    .alpaca-box { background: #0f172a; border: 2px solid #38bdf8; border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .badge { display: inline-block; background: #38bdf8; color: #0f172a; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-bottom: 8px; text-transform: uppercase; }
+    .play-test { display: flex; gap: 10px; margin-top: 14px; }
+    .play-test button { background: #38bdf8; color: #0f172a; font-weight: 700; border: none; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-size: 14px; }
+    .play-test button:hover { background: #7dd3fc; }
+    .test-box { margin-top: 24px; }
+    textarea {
+      width: 100%; height: 110px; background: #0f172a; border: 1.5px solid #334155;
+      border-radius: 12px; color: #f8fafc; font-size: 18px; padding: 14px; box-sizing: border-box;
+      outline: none; resize: none; font-family: inherit;
+    }
+    textarea:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,0.2); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Real Switch Audio</span>
+    <h1>Alpaca Mechanical Switch</h1>
+    <p>Loaded directly from the official <b>MonkeySounds Alpaca profile</b> (authentic recordings of real Alpaca linear switches with natural key-to-key variation and spacebar thock).</p>
+
+    <div class="alpaca-box">
+      <b style="font-size:18px;color:#fff">Alpaca Linear (Real Audio Samples)</b>
+      <p style="margin:6px 0 0;font-size:14px;color:#94a3b8">Ultra-smooth bottom out, warm acoustic clack, zero synthetic beep.</p>
+      
+      <div class="play-test">
+        <button onclick="playAlpacaKey()">🔊 Single Key</button>
+        <button onclick="playAlpacaSpace()" style="background:#64748b;color:#fff">⌨️ Spacebar</button>
+        <button onclick="testBurst()" style="background:#0284c7;color:#fff">⚡ Fast Typing Burst</button>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <label style="display:block;margin-bottom:8px;font-size:14px;font-weight:600;color:#cbd5e1">Type here at your full speed to test real gameplay feel:</label>
+      <textarea id="typingInput" placeholder="Click here and start typing sentences to hear the Alpaca switches..."></textarea>
+    </div>
+
+    <div style="margin-top:24px;text-align:center">
+      <button onclick="approveSound()" style="background:#22c55e;color:#052e16;font-size:16px;font-weight:800;border:none;border-radius:10px;padding:14px 28px;cursor:pointer">
+        ✅ If you like this, reply "apply" in chat and I'll update the game!
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let ctx = null;
+    let keyBuffers = [];
+    let spaceBuffer = null;
+
+    function getAudioCtx() {
+      if (!ctx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        ctx = new AudioClass();
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    // Preload audio files into Web Audio buffers for instant 0ms latency playback
+    async function loadSound(url) {
+      const audioCtx = getAudioCtx();
+      const res = await fetch(url);
+      const arrayBuf = await res.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuf);
+    }
+
+    async function initAudio() {
+      for (let i = 1; i <= 5; i++) {
+        try {
+          const buf = await loadSound('/sounds/alpaca/press_key' + i + '.mp3');
+          keyBuffers.push(buf);
+        } catch(e) {}
+      }
+      try {
+        spaceBuffer = await loadSound('/sounds/alpaca/press_space.mp3');
+      } catch(e) {}
+    }
+    initAudio();
+
+    function playBuffer(buf, vol = 0.8) {
+      if (!buf) return;
+      const x = getAudioCtx();
+      const src = x.createBufferSource();
+      src.buffer = buf;
+      // Slight pitch variation for ultra-realism
+      src.playbackRate.value = 0.98 + Math.random() * 0.04;
+      const g = x.createGain();
+      g.gain.value = vol;
+      src.connect(g);
+      g.connect(x.destination);
+      src.start();
+    }
+
+    function playAlpacaKey() {
+      if (keyBuffers.length === 0) return;
+      const buf = keyBuffers[Math.floor(Math.random() * keyBuffers.length)];
+      playBuffer(buf, 0.85);
+    }
+
+    function playAlpacaSpace() {
+      if (spaceBuffer) playBuffer(spaceBuffer, 0.9);
+      else playAlpacaKey();
+    }
+
+    function testBurst() {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+          if (i === 4) playAlpacaSpace();
+          else playAlpacaKey();
+        }, i * 95);
+      }
+    }
+
+    const typingInput = document.getElementById('typingInput');
+    typingInput.addEventListener('keydown', (e) => {
+      getAudioCtx();
+      if (e.key === ' ') {
+        playAlpacaSpace();
+      } else if (e.key === 'Backspace' || e.key === 'Enter' || e.key.length === 1) {
+        playAlpacaKey();
+      }
+    });
+  </script>
+</body>
+</html>

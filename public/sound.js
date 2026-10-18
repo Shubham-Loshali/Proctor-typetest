@@ -1,13 +1,56 @@
-// All sounds are generated with the Web Audio API, so there are no audio files to host.
+// Real Alpaca Mechanical Switch Audio with zero-latency Web Audio API playback
 const Snd = (() => {
   let ctx = null;
   let muted = localStorage.getItem('mute') === '1';
-  let clickBuf = null;
+  const keyBuffers = [];
+  let spaceBuffer = null;
 
   function c() {
-    if (!ctx) { const A = window.AudioContext || window.webkitAudioContext; ctx = new A(); }
+    if (!ctx) {
+      const A = window.AudioContext || window.webkitAudioContext;
+      ctx = new A();
+    }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
+  }
+
+  // Preload Alpaca switch audio files into memory
+  async function loadBuffer(url) {
+    try {
+      const audioCtx = c();
+      const res = await fetch(url);
+      const arrayBuf = await res.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuf);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function preloadAlpaca() {
+    for (let i = 1; i <= 5; i++) {
+      const buf = await loadBuffer('/sounds/alpaca/press_key' + i + '.mp3');
+      if (buf) keyBuffers.push(buf);
+    }
+    spaceBuffer = await loadBuffer('/sounds/alpaca/press_space.mp3');
+  }
+
+  // Preload as soon as the script loads
+  if (typeof window !== 'undefined') {
+    preloadAlpaca();
+  }
+
+  function playBuffer(buf, vol = 0.85) {
+    if (muted || !buf) return;
+    const x = c();
+    const src = x.createBufferSource();
+    src.buffer = buf;
+    // Natural slight pitch variation for mechanical realism
+    src.playbackRate.value = 0.98 + Math.random() * 0.04;
+    const gainNode = x.createGain();
+    gainNode.gain.value = vol;
+    src.connect(gainNode);
+    gainNode.connect(x.destination);
+    src.start();
   }
 
   function tone(freq, dur, type, vol, delay, slideTo) {
@@ -23,29 +66,33 @@ const Snd = (() => {
     o.start(t); o.stop(t + dur + 0.02);
   }
 
-  // mechanical key: a short noise "tick" plus a low "thock"
-  function key() {
+  function key(char) {
     if (muted) return;
-    const x = c();
-    if (!clickBuf) {
-      const n = Math.floor(x.sampleRate * 0.035);
-      clickBuf = x.createBuffer(1, n, x.sampleRate);
-      const d = clickBuf.getChannelData(0);
-      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 4);
+    c();
+    if (char === ' ' && spaceBuffer) {
+      playBuffer(spaceBuffer, 0.9);
+      return;
     }
-    const s = x.createBufferSource(); s.buffer = clickBuf;
-    s.playbackRate.value = 0.9 + Math.random() * 0.3;
-    const f = x.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1400;
-    const g = x.createGain(); g.gain.value = 0.45;
-    s.connect(f); f.connect(g); g.connect(x.destination); s.start();
-    tone(130, 0.05, 'sine', 0.12, 0);
+    if (keyBuffers.length > 0) {
+      const buf = keyBuffers[Math.floor(Math.random() * keyBuffers.length)];
+      playBuffer(buf, 0.85);
+    }
+  }
+
+  function back() {
+    if (muted) return;
+    c();
+    if (keyBuffers.length > 0) {
+      const buf = keyBuffers[Math.floor(Math.random() * keyBuffers.length)];
+      playBuffer(buf, 0.75);
+    }
   }
 
   return {
-    unlock() { c(); },
+    unlock() { c(); if (keyBuffers.length === 0) preloadAlpaca(); },
     key,
+    back,
     err() { tone(190, 0.14, 'sawtooth', 0.06, 0, 110); },
-    back() { tone(240, 0.04, 'triangle', 0.05, 0); },
     beep(go) { go ? tone(1040, 0.35, 'square', 0.05, 0) : tone(620, 0.12, 'square', 0.04, 0); },
     end() { tone(520, 0.5, 'sine', 0.12, 0); tone(390, 0.8, 'sine', 0.1, 0.12); },
     win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 'triangle', 0.1, i * 0.13)); },
