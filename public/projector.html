@@ -23,27 +23,43 @@
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 18px;
-      padding: 28px;
+      padding: 24px 28px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center
+      text-align: center;
+      min-width: 0;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     #phase {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
       color: var(--mute)
     }
 
     #clock {
-      font-size: clamp(80px, 13vw, 190px);
+      font-size: clamp(52px, 7vw, 100px);
       font-weight: 800;
-      line-height: 1;
+      line-height: 1.05;
       letter-spacing: -.03em;
       font-variant-numeric: tabular-nums;
-      margin: 10px 0
+      margin: 12px 0;
+      max-width: 100%;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    #clock.long-time {
+      font-size: clamp(34px, 4.4vw, 68px);
+      letter-spacing: -.04em;
+    }
+
+    #clock.single-num {
+      font-size: clamp(72px, 11vw, 150px);
+      letter-spacing: -.02em;
     }
 
     #sub {
@@ -199,24 +215,37 @@
       if (r.winner) $('winner').textContent = 'Winner: ' + r.winner.name + ' - ' + r.winner.wpm + ' WPM';
     });
 
+    function setClock(val) {
+      const el = $('clock');
+      const txt = String(val);
+      if (el.textContent !== txt) el.textContent = txt;
+      if (txt.length > 5) {
+        el.className = 'long-time';
+      } else if (txt.length <= 2) {
+        el.className = 'single-num';
+      } else {
+        el.className = '';
+      }
+    }
+
     function paint() {
       if (!state) return;
       $('codebox').hidden = !(code && state.phase === 'lobby');
       const now = Date.now() + offset;
       if (state.phase === 'lobby') {
         $('phase').textContent = 'Round ' + state.round + ' - players are joining';
-        $('clock').textContent = fmt(state.duration * 1000);
+        setClock(fmt(state.duration * 1000));
         $('sub').innerHTML = '<b>' + state.count + '</b> players ready';
       } else if (state.phase === 'countdown' || (state.phase === 'running' && now < state.startAt)) {
         $('phase').textContent = 'Get ready';
-        $('clock').textContent = Math.max(1, Math.ceil((state.startAt - now) / 1000));
+        setClock(Math.max(1, Math.ceil((state.startAt - now) / 1000)));
         $('sub').textContent = 'Eyes on your screen';
       } else if (state.phase === 'running') {
         $('phase').textContent = 'Typing now';
-        $('clock').textContent = fmt(Math.max(0, state.endAt - now));
+        setClock(fmt(Math.max(0, state.endAt - now)));
       } else if (state.phase === 'finished') {
         $('phase').textContent = 'Time is up';
-        $('clock').textContent = '0:00';
+        setClock('0:00');
         $('sub').textContent = 'Round ' + state.round + ' complete';
       }
     }
