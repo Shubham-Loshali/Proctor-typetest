@@ -26,7 +26,7 @@ if (!CODE) { console.log('Missing --code. Example: node test/loadtest.js --url h
 const TEXT = 'Every great project begins with a small idea and a stubborn habit of trying again. Code that works on the first run is rare, so we learn to read errors, test our assumptions, and fix one thing at a time. Teamwork matters as much as talent, because a clear message to a teammate can save hours of confusion. Keep your hands relaxed, your eyes on the screen, and your mind on the next word.';
 
 const m = {
-  connected: 0, joined: 0, joinFail: 0, connectErr: 0, disconnects: 0, reconnects: 0,
+  phases: {}, connected: 0, joined: 0, joinFail: 0, connectErr: 0, disconnects: 0, reconnects: 0,
   connectMs: [], joinMs: [], rtt: [], rttWindow: [], timeouts: 0, results: 0, roundStarted: false, packets: 0,
 };
 let health = null;
@@ -54,6 +54,7 @@ function bot(i) {
   s.on('disconnect', () => { m.disconnects++; });
   s.on('results', () => { m.results++; });
   s.on('state', (st) => {
+    m.phases[st.phase] = (m.phases[st.phase] || 0) + 1;
     if (st.text && st.startAt !== started) {
       started = st.startAt; text = st.text; m.roundStarted = true;
       const off = st.serverNow - Date.now();
@@ -122,6 +123,7 @@ function finish() {
   console.log(`Join answer time  : p50 ${pct(m.joinMs, 0.5)}ms  p95 ${pct(m.joinMs, 0.95)}ms  slowest ${m.joinMs.length ? Math.max(...m.joinMs) : 0}ms`);
   console.log(`Ping (round trip) : p50 ${p50}ms  p95 ${p95}ms  p99 ${p99}ms  max ${max}ms   (timeouts: ${m.timeouts})`);
   console.log(`Disconnects       : ${m.disconnects}   reconnects: ${m.reconnects}`);
+  console.log(`Phases seen       : ${Object.entries(m.phases).map(([k, v]) => k + ' x' + v).join(', ') || 'none'}   (a finished round shows "finished" about ${N} times)`);
   console.log(`Round             : ${m.roundStarted ? 'ran, ' + m.results + '/' + N + ' players received final results, ' + m.packets + ' progress packets sent' : 'DID NOT RUN (start one from /admin or pass --pass)'}`);
   if (PASS) console.log(`Server's own view : worst stall ${maxHealth.loopMax}ms, worst p99 delay ${maxHealth.loopP99}ms, peak CPU ${maxHealth.cpu}% of one core`);
 

@@ -157,6 +157,7 @@ function startGame() {
   if (!act.length) return 'No players have joined yet';
   for (const p of act) { p.typed = ''; p.keys = 0; p.mistakes = 0; p.finishedAt = 0; p.blurs = 0; p.flags = 0; p.lastAt = 0; p.lastLen = 0; p.lastRank = 0; p.lastTotal = 0; }
   game.phase = 'countdown';
+  console.log(`[round ${game.round}] started: ${act.length} players, ${game.duration}s`);
   game.startAt = Date.now() + COUNTDOWN_MS;
   game.endAt = game.startAt + game.duration * 1000;
   lastResults = null;
@@ -179,6 +180,8 @@ function finishGame() {
   const byPid = new Map(rk.map((r, i) => [r.p.pid, rows[i]]));
   lastResults = { winner, top, rows, total: rows.length, byPid };
   pushState();
+  const online = rk.filter((r) => r.p.sid).length;
+  console.log(`[round ${game.round}] finished: ${rows.length} players, ${online} online, winner ${winner ? winner.name + ' ' + winner.wpm + ' WPM' : '-'}`);
   rk.forEach((r, i) => { if (r.p.sid) io.to(r.p.sid).emit('results', { winner, top, me: rows[i], total: rows.length }); });
   io.to('admin').emit('adminResults', { rows, round: game.round });
   io.to('screen').emit('results', { winner, top, total: rows.length });
