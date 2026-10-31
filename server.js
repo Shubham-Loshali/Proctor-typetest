@@ -3,6 +3,7 @@ const http = require('http');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
+const { monitorEventLoopDelay } = require('perf_hooks');
 const fs = require('fs');
 const { Server } = require('socket.io');
 
@@ -219,10 +220,32 @@ setInterval(() => {
   if (total && done === total) finishGame();
 }, 1000);
 
+// ---------- server health (shown on the admin page, warned in the Render logs) ----------
+const loop = monitorEventLoopDelay({ resolution: 20 });
+loop.enable();
+let lastCpu = process.cpuUsage(), lastT = Date.now();
+setInterval(() => {
+  const now = Date.now(), cpu = process.cpuUsage(lastCpu);
+  const cpuPct = Math.round(((cpu.user + cpu.system) / 1000) / (now - lastT) * 1000) / 10; // % of one core
+  lastCpu = process.cpuUsage(); lastT = now;
+  const h = {
+    sockets: io.engine.clientsCount,
+    loopP99: Math.round(loop.percentile(99) / 1e6),   // ms the server was late to react (p99)
+    loopMax: Math.round(loop.max / 1e6),
+    cpu: cpuPct,
+    rss: Math.round(process.memoryUsage().rss / 1048576),
+  };
+  loop.reset();
+  if (h.loopMax > 300) console.warn(`[health] server stalled ${h.loopMax}ms (p99 ${h.loopP99}ms) cpu ${h.cpu}% sockets ${h.sockets}`);
+  io.to('admin').emit('health', h);
+}, 2000);
+
 // ---------- sockets ----------
 io.on('connection', (socket) => {
   const isAdmin = () => !!socket.data.admin;
   const deny = (cb) => typeof cb === 'function' && cb({ ok: false, error: 'Not logged in as admin' });
+
+  socket.on('latency', (cb) => { if (typeof cb === 'function') cb(); }); // round-trip probe for tests / ?debug badge
 
   socket.on('join', (d, cb) => {
     if (typeof cb !== 'function') return;

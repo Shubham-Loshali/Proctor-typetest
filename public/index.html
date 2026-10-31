@@ -964,6 +964,21 @@
       }
     });
     socket.on('count', (n) => { $('count').textContent = n; });
+
+    // Add ?debug to the player URL to see this device's live ping to the server
+    if (/[?&]debug\b/.test(location.search)) {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:fixed;right:8px;bottom:8px;z-index:99999;background:#000c;color:#fff;font:12px monospace;padding:4px 8px;border-radius:6px';
+      b.textContent = 'ping: ...'; document.body.appendChild(b);
+      setInterval(() => {
+        const t = performance.now();
+        socket.timeout(5000).emit('latency', (err) => {
+          const ms = Math.round(performance.now() - t);
+          b.textContent = err ? 'ping: TIMEOUT' : 'ping: ' + ms + ' ms';
+          b.style.background = err || ms > 800 ? '#c62828' : ms > 300 ? '#b26a00' : '#2e7d32';
+        });
+      }, 2000);
+    }
     socket.on('status', (s) => { active = s.active; if (!active && joined) show('s-out'); });
     socket.on('me', (m) => { $('rank').textContent = '#' + m.rank + ' / ' + m.total; });
     socket.on('kicked', () => {

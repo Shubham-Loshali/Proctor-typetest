@@ -97,7 +97,8 @@
           <h2>Status</h2>
           <p style="margin:0 0 6px">Round <b id="round">1</b> &middot; <b id="count">0</b> players &middot; <span
               id="phase">lobby</span></p>
-          <p class="muted" id="urls" style="margin:0 0 14px"></p>
+          <p class="muted" id="urls" style="margin:0 0 10px"></p>
+          <p id="health" class="muted" style="margin:0 0 14px;font-size:14px">Server health: waiting...</p>
           <div
             style="background:#eaf1ff;border:1px solid #c9dcff;border-radius:12px;padding:14px 18px;margin-bottom:14px">
             <div class="muted" style="font-size:14px">Join code (share this with participants)</div>
@@ -178,6 +179,13 @@
     socket.on('connect', () => { if (pass) login(pass); });
     socket.on('disconnect', () => { $('pill').textContent = 'Offline'; $('pill').className = 'pill'; });
 
+    socket.on('health', (h) => {
+      const bad = h.loopMax > 500 || h.loopP99 > 200, warn = h.loopMax > 150 || h.cpu > 80;
+      const el = $('health');
+      el.textContent = (bad ? 'LAGGING' : warn ? 'Busy' : 'Healthy') + ' - ' + h.sockets + ' connections, server delay ' + h.loopP99 + ' ms (worst ' + h.loopMax + ' ms), CPU ' + h.cpu + '%, memory ' + h.rss + ' MB';
+      el.style.color = bad ? '#c62828' : warn ? '#b26a00' : '#2e7d32';
+      el.style.fontWeight = '600';
+    });
     socket.on('adminCode', (c) => { $('code').textContent = c; });
     $('newcode').onclick = () => {
       if (!confirm('Generate a new code? New players will need the new code (players already in keep their seat).')) return;

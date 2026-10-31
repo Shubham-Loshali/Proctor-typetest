@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "bots": "node test/bots.js"
+    "bots": "node test/bots.js",
+    "loadtest": "node test/loadtest.js"
   },
   "dependencies": {
     "express": "^4.19.2",
