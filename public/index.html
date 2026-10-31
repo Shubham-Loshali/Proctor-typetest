@@ -668,7 +668,7 @@
       }
     };
 
-    const socket = io();
+    const socket = io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 5000 });
     let pid = localStorage.getItem('pid') || uid();
     localStorage.setItem('pid', pid);
     let me = { name: localStorage.getItem('name') || '', roll: localStorage.getItem('roll') || '', code: localStorage.getItem('code') || '' };
@@ -963,6 +963,7 @@
         show('s-play');
       }
     });
+    socket.on('count', (n) => { $('count').textContent = n; });
     socket.on('status', (s) => { active = s.active; if (!active && joined) show('s-out'); });
     socket.on('me', (m) => { $('rank').textContent = '#' + m.rank + ' / ' + m.total; });
     socket.on('kicked', () => {
@@ -1031,7 +1032,7 @@
       socket.emit('progress', { typed, keys, mistakes });
       dirty = false;
     }
-    setInterval(() => { if (dirty && started && !ended) flush(); }, 300);
+    setInterval(() => { if (dirty && started && !ended) flush(); }, 500);
 
     inp.addEventListener('input', (e) => {
       if (!e.isTrusted) { inp.value = typed; return; }

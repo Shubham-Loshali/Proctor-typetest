@@ -150,7 +150,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const socket = io();
+    const socket = io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 5000 });
     let pass = sessionStorage.getItem('pass') || '', filled = false, phase = 'lobby';
 
     function say(t, good) { const m = $('msg'); m.textContent = t || ''; m.className = 'msg ' + (good ? 'good' : 'bad'); }
@@ -199,6 +199,8 @@
       if (s.phase === 'lobby') { $('ltitle').textContent = 'Live leaderboard'; }
       buttons();
     });
+
+    socket.on('count', (n) => { $('count').textContent = n; });
 
     function table(rows) {
       $('rows').innerHTML = rows.length ? rows.map((r) =>

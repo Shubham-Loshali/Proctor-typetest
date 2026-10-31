@@ -9,7 +9,7 @@ const CODE = process.argv[4];
 if (!CODE) { console.log('Usage: node test/bots.js 100 http://localhost:3000 JOINCODE'); process.exit(1); }
 
 for (let i = 0; i < N; i++) {
-  const s = io(URL);
+  const s = io(URL, { transports: ['websocket', 'polling'] });
   const pid = 'bot' + i;
   const wpm = 30 + Math.random() * 70; // 30 to 100 WPM
   let startAt = 0, offset = 0, text = '', timer = null;

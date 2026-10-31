@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const os = require('os');
 const path = require('path');
+const zlib = require('zlib');
+const fs = require('fs');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
@@ -21,11 +23,48 @@ const DEFAULT_TEXT =
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+// Tuned for a small shared-CPU host (e.g. Render free tier): a busy event loop must not get
+// players disconnected, and a single oversized packet must not be able to hurt the server.
+const io = new Server(server, {
+  pingInterval: 25000,
+  pingTimeout: 60000,          // default is 20s: a CPU stall longer than that used to drop everyone
+  maxHttpBufferSize: 2e5,      // progress packets are tiny; reject anything huge
+  perMessageDeflate: false,    // compression burns CPU we do not have
+  connectTimeout: 45000,
+});
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/admin', (_, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('/screen', (_, res) => res.sendFile(path.join(__dirname, 'public', 'projector.html')));
+// Health check (use it for Render's health check and for an uptime pinger so the free instance stays awake)
+app.get('/healthz', (_, res) => res.type('text').send('ok'));
+
+// Serve html/css/js gzipped from memory (compressed once at startup, not per request)
+const PUB = path.join(__dirname, 'public');
+const gz = new Map();
+function loadGz() {
+  for (const f of fs.readdirSync(PUB)) {
+    if (!/\.(html|css|js)$/.test(f)) continue;
+    const body = fs.readFileSync(path.join(PUB, f));
+    const type = f.endsWith('.html') ? 'text/html; charset=utf-8' : f.endsWith('.css') ? 'text/css; charset=utf-8' : 'application/javascript; charset=utf-8';
+    gz.set('/' + f, { type, buf: zlib.gzipSync(body, { level: 9 }) });
+  }
+}
+loadGz();
+const sendGz = (req, res, key) => {
+  const e = gz.get(key);
+  if (!e || !/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return false;
+  res.set({ 'Content-Type': e.type, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Cache-Control': 'no-cache' });
+  res.send(e.buf);
+  return true;
+};
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  const key = req.path === '/' ? '/index.html' : req.path;
+  return sendGz(req, res, key) ? undefined : next();
+});
+
+app.use('/sounds', express.static(path.join(PUB, 'sounds'), { maxAge: '7d', immutable: true }));
+app.use(express.static(PUB, { maxAge: '5m' }));
+app.get('/admin', (req, res) => sendGz(req, res, '/admin.html') || res.sendFile(path.join(PUB, 'admin.html')));
+app.get('/screen', (req, res) => sendGz(req, res, '/projector.html') || res.sendFile(path.join(PUB, 'projector.html')));
 
 function urls() {
   const out = [];
@@ -103,11 +142,19 @@ function stateFor() {
 }
 const pushState = () => io.emit('state', stateFor());
 
+// Player-count broadcast, at most once per second. Previously every single join re-sent the full
+// state to every connected client, which is O(n^2) work when a whole room joins at once.
+let countTimer = null;
+function pushCount() {
+  if (countTimer) return;
+  countTimer = setTimeout(() => { countTimer = null; io.emit('count', activePlayers().length); }, 1000);
+}
+
 function startGame() {
   if (game.phase !== 'lobby') return 'A round is already in progress';
   const act = activePlayers();
   if (!act.length) return 'No players have joined yet';
-  for (const p of act) { p.typed = ''; p.keys = 0; p.mistakes = 0; p.finishedAt = 0; p.blurs = 0; p.flags = 0; p.lastAt = 0; p.lastLen = 0; }
+  for (const p of act) { p.typed = ''; p.keys = 0; p.mistakes = 0; p.finishedAt = 0; p.blurs = 0; p.flags = 0; p.lastAt = 0; p.lastLen = 0; p.lastRank = 0; p.lastTotal = 0; }
   game.phase = 'countdown';
   game.startAt = Date.now() + COUNTDOWN_MS;
   game.endAt = game.startAt + game.duration * 1000;
@@ -153,15 +200,24 @@ function resetLobby(keepTop, advance) {
   pushState();
 }
 
-// live leaderboard + personal rank, 2 times per second-ish
+// live leaderboard (admin + big screen only) and personal rank (only when it changed), once per second
 setInterval(() => {
   if (game.phase !== 'running') return;
   const rk = ranking();
-  const rows = rk.map(toRow);
-  io.emit('board', { count: rows.length, done: rows.filter((r) => r.done).length, top: rows.slice(0, 10) });
-  rk.forEach((r, i) => { if (r.p.sid) io.to(r.p.sid).emit('me', { ...rows[i], total: rows.length }); });
-  if (rows.length && rows.every((r) => r.done)) finishGame();
-}, 700);
+  const total = rk.length;
+  const done = rk.reduce((n, r) => n + (r.s.finishedAt ? 1 : 0), 0);
+  const top = rk.slice(0, 10).map(toRow);
+  io.to('admin').to('screen').emit('board', { count: total, done, top });
+  rk.forEach((r, i) => {
+    const p = r.p;
+    if (!p.sid) return;
+    if (p.lastRank !== i + 1 || p.lastTotal !== total) {
+      p.lastRank = i + 1; p.lastTotal = total;
+      io.to(p.sid).emit('me', { rank: i + 1, total });
+    }
+  });
+  if (total && done === total) finishGame();
+}, 1000);
 
 // ---------- sockets ----------
 io.on('connection', (socket) => {
@@ -191,7 +247,8 @@ io.on('connection', (socket) => {
       resume: inRound && p.active ? { typed: p.typed, keys: p.keys, mistakes: p.mistakes } : null,
     });
     socket.emit('status', { active: p.active });
-    pushState();
+    socket.emit('state', stateFor()); // only the joining client needs the full state
+    pushCount();                      // everyone else just gets a throttled player count
     if (game.phase === 'finished' && lastResults && p.active && lastResults.byPid.has(pid)) {
       socket.emit('results', { winner: lastResults.winner, top: lastResults.top, me: lastResults.byPid.get(pid), total: lastResults.total });
     }
