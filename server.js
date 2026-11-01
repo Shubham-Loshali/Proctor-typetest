@@ -93,6 +93,20 @@ let timers = [];
 const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
 const activePlayers = () => [...players.values()].filter((p) => p.active);
 
+// Players who closed the page stay on the list for a short while (so a refresh or a dropped
+// connection can resume), but they must not be counted as "in the lobby" and must not be dragged
+// into the next round.
+const OFFLINE_GRACE_MS = 15000;
+// In the lobby / results screens only people who are actually connected are counted.
+// During a round, everyone in it is counted, even if their phone briefly lost connection.
+const countedPlayers = () => (game.phase === 'lobby' || game.phase === 'finished')
+  ? activePlayers().filter((p) => p.sid)
+  : activePlayers();
+function dropGhosts() {
+  const now = Date.now();
+  for (const [pid, p] of players) if (!p.sid && now - (p.offlineAt || 0) > OFFLINE_GRACE_MS) players.delete(pid);
+}
+
 function cleanText(t) {
   return String(t || '')
     .replace(/[\u2018\u2019]/g, "'")
@@ -135,7 +149,7 @@ const toRow = (r, i) => ({
 function stateFor() {
   const s = {
     phase: game.phase, round: game.round, duration: game.duration,
-    startAt: game.startAt, endAt: game.endAt, serverNow: Date.now(), count: activePlayers().length,
+    startAt: game.startAt, endAt: game.endAt, serverNow: Date.now(), count: countedPlayers().length,
   };
   // the paragraph is only sent once the countdown starts, so nobody can peek early
   if (game.phase === 'countdown' || game.phase === 'running') s.text = game.text;
@@ -148,11 +162,12 @@ const pushState = () => io.emit('state', stateFor());
 let countTimer = null;
 function pushCount() {
   if (countTimer) return;
-  countTimer = setTimeout(() => { countTimer = null; io.emit('count', activePlayers().length); }, 1000);
+  countTimer = setTimeout(() => { countTimer = null; io.emit('count', countedPlayers().length); }, 1000);
 }
 
 function startGame() {
   if (game.phase !== 'lobby') return 'A round is already in progress';
+  dropGhosts(); // people who left the page are not part of this round
   const act = activePlayers();
   if (!act.length) return 'No players have joined yet';
   for (const p of act) { p.typed = ''; p.keys = 0; p.mistakes = 0; p.finishedAt = 0; p.blurs = 0; p.flags = 0; p.lastAt = 0; p.lastLen = 0; p.lastRank = 0; p.lastTotal = 0; }
@@ -248,6 +263,11 @@ io.on('connection', (socket) => {
   const isAdmin = () => !!socket.data.admin;
   const deny = (cb) => typeof cb === 'function' && cb({ ok: false, error: 'Not logged in as admin' });
 
+  socket.on('disconnect', () => {
+    const p = players.get(socket.data.pid);
+    if (p && p.sid === socket.id) { p.sid = null; p.offlineAt = Date.now(); pushCount(); }
+  });
+
   socket.on('latency', (cb) => { if (typeof cb === 'function') cb(); }); // round-trip probe for tests / ?debug badge
 
   socket.on('join', (d, cb) => {
@@ -265,7 +285,7 @@ io.on('connection', (socket) => {
       p = { pid, name, roll, sid: null, active: true, typed: '', keys: 0, mistakes: 0, finishedAt: 0, blurs: 0, flags: 0, lastAt: 0, lastLen: 0 };
       players.set(pid, p);
     } else { p.name = name; p.roll = roll; }
-    p.sid = socket.id;
+    p.sid = socket.id; p.offlineAt = 0;
     socket.data.pid = pid;
     const inRound = game.phase === 'countdown' || game.phase === 'running';
     cb({
