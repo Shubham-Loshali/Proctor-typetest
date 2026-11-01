@@ -155,12 +155,20 @@ function stateFor() {
   if (game.phase === 'countdown' || game.phase === 'running') s.text = game.text;
   return s;
 }
-const pushState = () => io.emit('state', stateFor());
+const pushState = () => { io.emit('state', stateFor()); pushPlayers(); };
 
 // Player-count broadcast, at most once per second. Previously every single join re-sent the full
 // state to every connected client, which is O(n^2) work when a whole room joins at once.
 let countTimer = null;
+// Full player list for the admin page (name, roll/team, online status). At most once per second.
+const playersList = () => [...players.values()].map((p) => ({ name: p.name, roll: p.roll || '', online: !!p.sid, out: !p.active }));
+let playersTimer = null;
+function pushPlayers() {
+  if (playersTimer) return;
+  playersTimer = setTimeout(() => { playersTimer = null; io.to('admin').emit('players', playersList()); }, 1000);
+}
 function pushCount() {
+  pushPlayers();
   if (countTimer) return;
   countTimer = setTimeout(() => { countTimer = null; io.emit('count', countedPlayers().length); }, 1000);
 }
@@ -340,6 +348,7 @@ io.on('connection', (socket) => {
     socket.join('admin');
     cb({ ok: true, text: game.text, duration: game.duration, urls: urls(), code: game.code });
     socket.emit('state', stateFor());
+    socket.emit('players', playersList());
     if (game.phase === 'finished' && lastResults) socket.emit('adminResults', { rows: lastResults.rows, round: game.round });
   });
 

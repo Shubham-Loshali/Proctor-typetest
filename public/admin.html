@@ -121,6 +121,29 @@
       </div>
 
       <section class="card" style="margin-top:20px">
+        <h2 id="ptitle">Players in the lobby (0)</h2>
+        <p class="muted" id="pstat" style="margin:0 0 10px">Nobody has joined yet.</p>
+        <input id="psearch" type="search" placeholder="Search by name or roll / team" autocomplete="off" style="max-width:320px;margin-bottom:10px">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Roll / team</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="prows">
+              <tr>
+                <td colspan="4" class="muted">Players appear here as they join.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:20px">
         <h2 id="ltitle">Live leaderboard</h2>
         <div class="scroll">
           <table>
@@ -209,6 +232,29 @@
     });
 
     socket.on('count', (n) => { $('count').textContent = n; });
+
+    // ----- list of everyone who has joined -----
+    let plist = [];
+    function drawPlayers() {
+      const q = $('psearch').value.trim().toLowerCase();
+      const online = plist.filter((p) => p.online && !p.out).length;
+      const offline = plist.filter((p) => !p.online && !p.out).length;
+      const out = plist.filter((p) => p.out).length;
+      $('ptitle').textContent = 'Players in the lobby (' + plist.length + ')';
+      $('pstat').textContent = plist.length
+        ? online + ' online' + (offline ? ', ' + offline + ' offline (removed when the next round starts)' : '') + (out ? ', ' + out + ' knocked out' : '')
+        : 'Nobody has joined yet.';
+      const rows = plist.map((p, i) => ({ p, n: i + 1 }))
+        .filter((x) => !q || x.p.name.toLowerCase().includes(q) || x.p.roll.toLowerCase().includes(q));
+      $('prows').innerHTML = rows.length ? rows.map((x) => {
+        const st = x.p.out ? '<span style="color:#b26a00;font-weight:600">Out</span>'
+          : x.p.online ? '<span style="color:#2e7d32;font-weight:600">Online</span>'
+          : '<span class="muted">Offline</span>';
+        return '<tr><td>' + x.n + '</td><td>' + esc(x.p.name) + '</td><td>' + esc(x.p.roll) + '</td><td>' + st + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" class="muted">' + (plist.length ? 'No match.' : 'Players appear here as they join.') + '</td></tr>';
+    }
+    socket.on('players', (l) => { plist = l; drawPlayers(); });
+    $('psearch').addEventListener('input', drawPlayers);
 
     function table(rows) {
       $('rows').innerHTML = rows.length ? rows.map((r) =>
