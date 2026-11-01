@@ -235,7 +235,7 @@ setInterval(() => {
       io.to(p.sid).emit('me', { rank: i + 1, total });
     }
   });
-  if (total && done === total) finishGame();
+  // the round always runs until the timer ends (finishGame is scheduled in startGame), even if everyone has finished typing
 }, 1000);
 
 // ---------- server health (shown on the admin page, warned in the Render logs) ----------
